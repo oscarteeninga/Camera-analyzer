@@ -1,0 +1,14 @@
+*
+!README.md
+!Makefile
+!Dockerfile
+!docker-compose-prod.yml
+!docker-compose.yml
+!app.py
+!requirements.txt
+
+!.dockerignore
+!.gitignore
+!.travis.yml
+!.readme-images/
+!.readme-images/*
