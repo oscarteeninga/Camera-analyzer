@@ -1,7 +1,8 @@
 import cv2
 import numpy as np
+import time
 
-capture = cv2.VideoCapture('rtsp://admin:10S7r13pe93@192.168.1.105:554')
+capture = cv2.VideoCapture('rtsp://admin:camera123@192.168.1.105:554')
 
 # 'path to input image/video'
 IMAGE='./1.mp4'
@@ -17,6 +18,9 @@ CLASSES='./yolov3.txt'
 # 'path to yolo pre-trained weights'
 # wget https://pjreddie.com/media/files/yolov3.weights
 WEIGHTS='./bin/yolo.weights'
+
+# read pre-trained model and config file
+net = cv2.dnn.readNet(WEIGHTS, CONFIG)
 
 classes = None
 with open(CLASSES, 'r') as f:
@@ -41,12 +45,9 @@ def draw_bounding_box(img, class_id, confidence, x, y, x_plus_w, y_plus_h):
     cv2.putText(img, label, (x-10,y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
 
-def processImage(image, index):
+def processImage(image, index, net):
     Width = image.shape[1]
     Height = image.shape[0]
-
-    # read pre-trained model and config file
-    net = cv2.dnn.readNet(WEIGHTS, CONFIG)
 
     # create input blob
     blob = cv2.dnn.blobFromImage(image, scale, (416, 416), (0, 0, 0), True, crop=False)
@@ -100,9 +101,13 @@ def processImage(image, index):
     cv2.imshow(out_image_name, image)
 
 while(True):
+    stime = time.time()
     ret, frame = capture.read()
+    print("Read time: " + str(time.time() - stime))
     if ret == True:
-        processImage(frame, 1)
+        stime = time.time()
+        processImage(frame, 1, net)
+        print("Proccess time: " + str(time.time() - stime))
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
