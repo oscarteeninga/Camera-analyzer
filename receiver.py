@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import time
 
-capture = cv2.VideoCapture('rtsp://admin:camera123@192.168.1.105:554')
 
 
 # 'path to yolo config file'
@@ -20,13 +19,15 @@ WEIGHTS='./bin/yolov3-tiny.weights'
 # read pre-trained model and config file
 net = cv2.dnn.readNet(WEIGHTS, CONFIG)
 
+capture = cv2.VideoCapture('rtsp://admin:camera123@192.168.1.105:554')
+
 classes = None
 with open(CLASSES, 'r') as f:
     classes = [line.strip() for line in f.readlines()]
 
 scale = 0.00392
-conf_threshold = 0.5
-nms_threshold = 0.4
+conf_threshold = 0.3
+nms_threshold = 0.3
 
 # generate different colors for different classes
 COLORS = np.random.uniform(0, 255, size=(len(classes), 3))
@@ -48,7 +49,7 @@ def processImage(image, index, net):
     Height = image.shape[0]
 
     # create input blob
-    blob = cv2.dnn.blobFromImage(image, scale, (416, 416), (0, 0, 0), True, crop=False)
+    blob = cv2.dnn.blobFromImage(image, scale, (128, 128), (0, 0, 0), True, crop=False)
     # set input blob for the network
     net.setInput(blob)
 
