@@ -7,7 +7,7 @@ capture = cv2.VideoCapture('rtsp://admin:camera123@192.168.1.105:554')
 
 # 'path to yolo config file'
 # download https://github.com/arunponnusamy/object-detection-opencv/blob/master/yolov3.cfg
-CONFIG='cfg/yolo.cfg'
+CONFIG='cfg/yolov3-tiny.cfg'
 
 # 'path to text file containing class names'
 # download https://github.com/arunponnusamy/object-detection-opencv/blob/master/yolov3.txt
@@ -15,7 +15,7 @@ CLASSES='./yolov3.txt'
 
 # 'path to yolo pre-trained weights'
 # wget https://pjreddie.com/media/files/yolov3.weights
-WEIGHTS='./bin/yolo.weights'
+WEIGHTS='./bin/yolov3-tiny.weights'
 
 # read pre-trained model and config file
 net = cv2.dnn.readNet(WEIGHTS, CONFIG)
