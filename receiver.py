@@ -4,8 +4,6 @@ import time
 
 capture = cv2.VideoCapture('rtsp://admin:camera123@192.168.1.105:554')
 
-# 'path to input image/video'
-IMAGE='./1.mp4'
 
 # 'path to yolo config file'
 # download https://github.com/arunponnusamy/object-detection-opencv/blob/master/yolov3.cfg
