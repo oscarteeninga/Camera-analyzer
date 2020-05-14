@@ -1,12 +1,13 @@
 import cv2
 import numpy as np
 import time
+import csv
 
 
 
 # 'path to yolo config file'
 # download https://github.com/arunponnusamy/object-detection-opencv/blob/master/yolov3.cfg
-CONFIG='cfg/yolov3-tiny.cfg'
+CONFIG='cfg/yolov3.cfg'
 
 # 'path to text file containing class names'
 # download https://github.com/arunponnusamy/object-detection-opencv/blob/master/yolov3.txt
@@ -14,12 +15,12 @@ CLASSES='./yolov3.txt'
 
 # 'path to yolo pre-trained weights'
 # wget https://pjreddie.com/media/files/yolov3.weights
-WEIGHTS='./bin/yolov3-tiny.weights'
+WEIGHTS='./bin/yolov3.weights'
 
 # read pre-trained model and config file
 net = cv2.dnn.readNet(WEIGHTS, CONFIG)
 
-capture = cv2.VideoCapture('rtsp://admin:camera123@192.168.1.105:554')
+capture = cv2.VideoCapture('rtsp://admin:camera123@192.168.0.105:554')
 
 classes = None
 with open(CLASSES, 'r') as f:
@@ -44,12 +45,12 @@ def draw_bounding_box(img, class_id, confidence, x, y, x_plus_w, y_plus_h):
     cv2.putText(img, label, (x-10,y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
 
-def processImage(image, index, net):
+def processImage(image, index, net, size):
     Width = image.shape[1]
     Height = image.shape[0]
 
     # create input blob
-    blob = cv2.dnn.blobFromImage(image, scale, (128, 128), (0, 0, 0), True, crop=False)
+    blob = cv2.dnn.blobFromImage(image, scale, (size, size), (0, 0, 0), True, crop=False)
     # set input blob for the network
     net.setInput(blob)
 
@@ -96,20 +97,42 @@ def processImage(image, index, net):
         draw_bounding_box(image, class_ids[i], confidences[i], round(x), round(y), round(x + w), round(y + h))
 
     # display output image
-    out_image_name = "object detection"
-    cv2.imshow(out_image_name, image)
+    # out_image_name = "object detection"
+    # cv2.imshow(out_image_name, image)
 
-while(True):
-    stime = time.time()
-    ret, frame = capture.read()
-    print("Read time: " + str(time.time() - stime))
-    if ret == True:
+
+def receiver(size, iteration = 20):
+    net = cv2.dnn.readNet(WEIGHTS, CONFIG)
+    capture = cv2.VideoCapture('rtsp://admin:camera123@192.168.0.105:554')
+    result = []
+    read_time = 0
+    process_time = 0
+    begin = time.time()
+    for _ in range(1, iteration):
         stime = time.time()
-        processImage(frame, 1, net)
-        print("Proccess time: " + str(time.time() - stime))
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        ret, frame = capture.read()
+        read_time += time.time() - stime
+        if ret == True:
+            stime = time.time()
+            processImage(frame, 1, net, size)
+            process_time += time.time() - stime
+    end_time = (time.time() - begin)
+    capture.release()
+    cv2.destroyAllWindows()
+    return [end_time/iteration, read_time/iteration, process_time/iteration]  
 
+def test():
+    result = []
+    sizes = [64, 96, 128, 160, 192, 256, 416]
+    for size in sizes:
+        result.append(receiver(size))
+        print(size)
+    print(result)
+    return result
 
-capture.release()
-cv2.destroyAllWindows()
+with open('test.csv', 'w', newline='') as output_file_name:
+        writer = csv.writer(output_file_name)
+        for result in test():
+            writer.writerow(result)
+        output_file_name.close()
+
