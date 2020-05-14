@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import time
+import csv
 
 
 
@@ -19,7 +20,7 @@ WEIGHTS='./bin/yolov3-tiny.weights'
 # read pre-trained model and config file
 net = cv2.dnn.readNet(WEIGHTS, CONFIG)
 
-capture = cv2.VideoCapture('rtsp://admin:camera123@192.168.1.105:554')
+capture = cv2.VideoCapture('rtsp://admin:camera123@192.168.0.105:554')
 
 classes = None
 with open(CLASSES, 'r') as f:
@@ -44,12 +45,12 @@ def draw_bounding_box(img, class_id, confidence, x, y, x_plus_w, y_plus_h):
     cv2.putText(img, label, (x-10,y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
 
-def processImage(image, index, net):
+def processImage(image, index, net, size, show=False):
     Width = image.shape[1]
     Height = image.shape[0]
 
     # create input blob
-    blob = cv2.dnn.blobFromImage(image, scale, (128, 128), (0, 0, 0), True, crop=False)
+    blob = cv2.dnn.blobFromImage(image, scale, (size, size), (0, 0, 0), True, crop=False)
     # set input blob for the network
     net.setInput(blob)
 
@@ -96,20 +97,56 @@ def processImage(image, index, net):
         draw_bounding_box(image, class_ids[i], confidences[i], round(x), round(y), round(x + w), round(y + h))
 
     # display output image
-    out_image_name = "object detection"
-    cv2.imshow(out_image_name, image)
+    if show:
+        out_image_name = "object detection"
+        cv2.imshow(out_image_name, image)
 
-while(True):
-    stime = time.time()
-    ret, frame = capture.read()
-    print("Read time: " + str(time.time() - stime))
-    if ret == True:
+
+def receiver(size, iteration = 20):
+    net = cv2.dnn.readNet(WEIGHTS, CONFIG)
+    capture = cv2.VideoCapture('rtsp://admin:camera123@192.168.0.105:554')
+    result = []
+    read_time = 0
+    process_time = 0
+    begin = time.time()
+    for _ in range(1, iteration):
         stime = time.time()
-        processImage(frame, 1, net)
-        print("Proccess time: " + str(time.time() - stime))
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        ret, frame = capture.read()
+        read_time += time.time() - stime
+        if ret == True:
+            stime = time.time()
+            processImage(frame, 1, net, size)
+            process_time += time.time() - stime
+    end_time = (time.time() - begin)
+    capture.release()
+    cv2.destroyAllWindows()
+    return [size, end_time/iteration, read_time/iteration, process_time/iteration]
+
+def presentation(size, iteration = 1000):
+    net = cv2.dnn.readNet(WEIGHTS, CONFIG)
+    capture = cv2.VideoCapture('rtsp://admin:camera123@192.168.0.105:554')
+    for i in range(1, iteration):
+        ret, frame = capture.read()
+        if ret == True:
+            processImage(frame, 1, net, size, True)
+    capture.release()
+    cv2.destroyAllWindows()
+
+def test():
+    result = []
+    sizes = [64, 96, 128, 160, 192, 256, 416]
+    for size in sizes:
+        result.append(receiver(size))
+        print(size)
+    print(result)
+    return result
+
+def tests():    
+    with open('test.csv', 'w', newline='') as output_file_name:
+            writer = csv.writer(output_file_name)
+            for result in test():
+                writer.writerow(result)
+            output_file_name.close()
 
 
-capture.release()
-cv2.destroyAllWindows()
+presentation(218, 10000)
