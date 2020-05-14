@@ -18,8 +18,6 @@ CLASSES='./yolov3.txt'
 WEIGHTS='./bin/yolov3-tiny.weights'
 
 # read pre-trained model and config file
-net = cv2.dnn.readNet(WEIGHTS, CONFIG)
-
 capture = cv2.VideoCapture('rtsp://admin:camera123@192.168.0.105:554')
 
 classes = None
@@ -50,7 +48,7 @@ def processImage(image, index, net, size, show=False):
     Height = image.shape[0]
 
     # create input blob
-    blob = cv2.dnn.blobFromImage(image, scale, (size, size), (0, 0, 0), True, crop=False)
+    blob = cv2.dnn.blobFromImage(image, scale*size/416, (size, size), (0, 0, 0), True, crop=False)
     # set input blob for the network
     net.setInput(blob)
 
@@ -122,13 +120,17 @@ def receiver(size, iteration = 20):
     cv2.destroyAllWindows()
     return [size, end_time/iteration, read_time/iteration, process_time/iteration]
 
-def presentation(size, iteration = 1000):
+def video(size, iteration = 1000):
     net = cv2.dnn.readNet(WEIGHTS, CONFIG)
-    capture = cv2.VideoCapture('rtsp://admin:camera123@192.168.0.105:554')
+    print("Begin presentation...")
     for i in range(1, iteration):
+        begin = time.time()
         ret, frame = capture.read()
         if ret == True:
             processImage(frame, 1, net, size, True)
+            print(time.time() - begin)
+        cv2.waitKey(1)
+            
     capture.release()
     cv2.destroyAllWindows()
 
@@ -148,5 +150,4 @@ def tests():
                 writer.writerow(result)
             output_file_name.close()
 
-
-presentation(218, 10000)
+video(416, 1000)
