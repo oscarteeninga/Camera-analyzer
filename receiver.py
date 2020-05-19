@@ -18,7 +18,7 @@ CLASSES='./yolov3.txt'
 WEIGHTS='./bin/yolov3-tiny.weights'
 
 # read pre-trained model and config file
-capture = cv2.VideoCapture('rtsp://admin:camera123@192.168.0.105:554')
+capture = cv2.VideoCapture('rtsp://admin:camera123@192.168.1.108:554')
 
 classes = None
 with open(CLASSES, 'r') as f:
@@ -68,7 +68,7 @@ def processImage(image, index, net, size, show=False):
             scores = detection[5:]
             class_id = np.argmax(scores)
             confidence = scores[class_id]
-            if confidence > 0.5:
+            if confidence > 0.2:
                 center_x = int(detection[0] * Width)
                 center_y = int(detection[1] * Height)
                 w = int(detection[2] * Width)
@@ -76,7 +76,10 @@ def processImage(image, index, net, size, show=False):
                 x = center_x - w / 2
                 y = center_y - h / 2
                 # save event to database
-                repository.insert(class_id)
+                label = str(classes[class_id])
+                print("Saving event: " + label + " with confidence: " + str(confidence))
+
+                repository.insert(label,str(confidence))
                 class_ids.append(class_id)
                 confidences.append(float(confidence))
                 boxes.append([x, y, w, h])
@@ -104,7 +107,7 @@ def processImage(image, index, net, size, show=False):
 
 def receiver(size, iteration = 20):
     net = cv2.dnn.readNet(WEIGHTS, CONFIG)
-    capture = cv2.VideoCapture('rtsp://admin:camera123@192.168.0.105:554')
+    capture = cv2.VideoCapture('rtsp://admin:camera123@192.168.1.108:554')
     result = []
     read_time = 0
     process_time = 0
