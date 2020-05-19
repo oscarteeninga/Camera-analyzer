@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import time
 import csv
-
+import repository
 
 
 # 'path to yolo config file'
@@ -75,6 +75,8 @@ def processImage(image, index, net, size, show=False):
                 h = int(detection[3] * Height)
                 x = center_x - w / 2
                 y = center_y - h / 2
+                # save event to database
+                repository.insert(class_id)
                 class_ids.append(class_id)
                 confidences.append(float(confidence))
                 boxes.append([x, y, w, h])
