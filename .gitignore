@@ -2,3 +2,5 @@ yolo.weights
 yolov3-320.weights
 .DS_Store
 .idea/
+.DS_Store
+*.csv
