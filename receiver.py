@@ -12,6 +12,7 @@ if argv[2] == "tiny":
 elif argv[2] == "regular":
     print("Launching system for YOLO")
     CONFIG='cfg/yolov3-320.cfg'
+    # https://pjreddie.com/media/files/yolov3.weights
     WEIGHTS='./bin/yolov3-320.weights'
 else:
     print("Unkown model")
