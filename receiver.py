@@ -5,11 +5,11 @@ import csv
 import repository
 from sys import argv
 
-if argv[1] == "tiny":
+if argv[2] == "tiny":
     print("Launching system for TinyYOLO")
     CONFIG='cfg/yolov3-tiny.cfg'
     WEIGHTS='./bin/yolov3-tiny.weights'
-elif argv[1] == "regular":
+elif argv[2] == "regular":
     print("Launching system for YOLO")
     CONFIG='cfg/yolov3-320.cfg'
     WEIGHTS='./bin/yolov3-320.weights'
@@ -140,4 +140,4 @@ def tests():
                 writer.writerow(result)
             output_file_name.close()
 
-video(320, 10000)
+video(int(argv[1]), 10000)
