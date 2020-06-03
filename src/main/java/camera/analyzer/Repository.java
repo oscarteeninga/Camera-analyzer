@@ -19,7 +19,7 @@ import java.util.List;
 public class Repository {
     private static Repository INSTANCE = null;
 
-    private static final String JDBC_URL = "jdbc:sqlite:/home/tom/PycharmProjects/Camera-analyzer/data.db";
+    private static final String JDBC_URL = "jdbc:sqlite:data.db";
     private static final String DRIVER = "org.sqlite.JDBC";
 
     private Connection connection;
