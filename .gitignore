@@ -1,6 +1,7 @@
 yolo.weights
 .DS_Store
 hehehe
+/Camera-event-recognition/bin/
 .idea/
 # Ignore Gradle project-specific cache directory
 .gradle
