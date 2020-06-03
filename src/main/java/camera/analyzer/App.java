@@ -3,12 +3,33 @@
  */
 package camera.analyzer;
 
+import com.mollin.yapi.YeelightDevice;
+import com.mollin.yapi.enumeration.YeelightProperty;
+import com.mollin.yapi.exception.YeelightResultErrorException;
+import com.mollin.yapi.exception.YeelightSocketException;
+
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class App {
     public String getGreeting() {
         return "Hello world.";
     }
 
-    public static void main(String[] args) {
-        System.out.println(new App().getGreeting());
+    public static void main(String[] args) throws YeelightSocketException {
+        YeelightDevice yeelightDevice = new YeelightDevice("192.168.1.39");
+        AtomicBoolean last = new AtomicBoolean(true);
+        new LocalDataSource().registerObserver(event->{
+            if(event.getName().equals("person")) {
+                try {
+                    boolean newLast = !last.get();
+                    yeelightDevice.setPower(last.getAndSet(newLast));
+                } catch (YeelightResultErrorException e) {
+                    e.printStackTrace();
+                } catch (YeelightSocketException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 }

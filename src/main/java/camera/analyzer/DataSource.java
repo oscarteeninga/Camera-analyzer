@@ -1,4 +1,5 @@
 package camera.analyzer;
 
-public interface DataSouce {
+public interface DataSource {
+    void registerObserver(EventObserver observer);
 }

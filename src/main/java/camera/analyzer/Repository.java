@@ -1,13 +1,28 @@
 package camera.analyzer;
 
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.ResolverStyle;
+import java.time.temporal.TemporalAccessor;
+import java.util.ArrayList;
+import java.util.List;
+
 public class Repository {
     private static Repository INSTANCE = null;
 
-    private static final String JDBC_URL = "jdbc:sqlite:requests.db";
+    private static final String JDBC_URL = "jdbc:sqlite:/home/tom/PycharmProjects/Camera-analyzer/data.db";
     private static final String DRIVER = "org.sqlite.JDBC";
 
     private Connection connection;
-    private Statement statement;
 
     private Repository() {
         try {
@@ -19,16 +34,7 @@ public class Repository {
 
         try {
             connection = DriverManager.getConnection(JDBC_URL);
-            statement = connection.createStatement();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        try {
-            statement.execute("DROP TABLE Request");
-        } catch (SQLException e) {
-        }
-        try {
-            statement.execute("CREATE TABLE IF NOT EXISTS Request (id INTEGER PRIMARY KEY AUTOINCREMENT, query text, counter bigint)");
+            connection.createStatement();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -43,49 +49,22 @@ public class Repository {
         }
     }
 
-    public void insert(String query, int count) throws SQLException {
-        PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO Request(query,counter) VALUES ( ?, ?);");
-        preparedStatement.setString(1, query);
-        preparedStatement.setInt(2, count);
-        int update = preparedStatement.executeUpdate();
-        if (update == 0)
-            System.out.println("Unsuccessful query");
-    }
+    DateTimeFormatter sqlDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    public void showAll() throws SQLException {
-        ResultSet result = statement.executeQuery("SELECT * FROM Request;");
-        while (result.next()) {
-            String query = result.getString("query");
-            int count = result.getInt("counter");
-            System.out.println(query + ", " + count);
-        }
-    }
-
-    public void update(String query, int counter) throws SQLException {
-        PreparedStatement preparedStatement = connection.prepareStatement("UPDATE Request SET counter = ? WHERE query = ?");
-        preparedStatement.setInt(1, counter);
-        preparedStatement.setString(2, query);
-        int update = preparedStatement.executeUpdate();
-        if (update == 0)
-            System.out.println("Unsuccessful query");
-    }
-
-    synchronized public int getCounter(String query) throws SQLException {
-        PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM Request WHERE query = ?");
-        preparedStatement.setString(1, query);
+    public List<Event> getEventsAfterOrEqual(LocalDateTime lastScannedAt) throws SQLException {
+        List<Event> results = new ArrayList<>();
+        PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM events where date >= ?;");
+        preparedStatement.setString(1, sqlDateFormat.format(lastScannedAt));
         ResultSet result = preparedStatement.executeQuery();
-        if (result != null && result.next()) {
-            return result.getInt("counter");
-        } else
-            return 0;
-    }
-
-    synchronized public void increment(String query) throws SQLException {
-        int counter = getCounter(query);
-        int newCounter = counter + 1;
-        if (counter > 0)
-            update(query, newCounter);
-        else
-            insert(query, newCounter);
+        while (result.next()) {
+            String name = result.getString("object");
+            String confidenceString = result.getString("confidence");
+            double confidence = Double.parseDouble(confidenceString);
+            String date = result.getString("date");
+            //todo parse date
+//            LocalDateTime localDateTime = LocalDateTime.parse(date,sqlDateFormat);
+            results.add(new Event(name, LocalDateTime.now(), confidence));
+        }
+        return results;
     }
 }
