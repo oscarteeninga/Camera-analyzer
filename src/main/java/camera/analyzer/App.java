@@ -12,9 +12,14 @@ public class App {
 
     public static void main(String[] args) throws YeelightSocketException {
         LightController lightController = new LightController();
-        new LocalDataSource().registerObserver(event->{
-            if(event.getName().equals("person")) {
-                lightController.toggle();
+        new LocalDataSource().registerObserver(event -> {
+            switch (event.getName()) {
+                case "person":
+                    lightController.setPowerOn();
+                    break;
+                case "bottle":
+                    lightController.setPowerOff();
+                    break;
             }
         });
     }

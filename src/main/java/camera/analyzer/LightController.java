@@ -8,13 +8,37 @@ import java.util.GregorianCalendar;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class LightController {
-    private static final long TOGGLE_DELAY_MS = 1000L;
+    private static final long TOGGLE_DELAY_MS = 700L;
     private final YeelightDevice yeelightDevice;
     private AtomicBoolean last = new AtomicBoolean(true);
     private long lastToggleAt = 0;
 
     public LightController() throws YeelightSocketException {
         this.yeelightDevice = new YeelightDevice("192.168.1.39");
+    }
+
+    public void setPowerOn() {
+        if (canToggle()) {
+            try {
+                yeelightDevice.setPower(true);
+            } catch (YeelightResultErrorException e) {
+                e.printStackTrace();
+            } catch (YeelightSocketException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void setPowerOff() {
+        if (canToggle()) {
+            try {
+                yeelightDevice.setPower(false);
+            } catch (YeelightResultErrorException e) {
+                e.printStackTrace();
+            } catch (YeelightSocketException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void toggle() {
