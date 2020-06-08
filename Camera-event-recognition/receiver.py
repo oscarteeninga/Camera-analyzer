@@ -102,7 +102,7 @@ def processImage(image, index, net, size, show=False):
     # display output image
     if show:
         out_image_name = "object detection"
-        cv2.imshow(out_image_name, image)
+        # cv2.imshow(out_image_name, image)
 
 
 def receiver(size, iteration = 20):
@@ -133,7 +133,7 @@ def video(size, iteration = 1000):
         ret, frame = capture.read()
         if ret == True:
             processImage(frame, 1, net, size, True)
-            print(time.time() - begin)
+            # print(time.time() - begin)
         cv2.waitKey(1)
             
     capture.release()
