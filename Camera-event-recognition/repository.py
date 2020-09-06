@@ -11,6 +11,7 @@ conn.commit()
 
 
 def insert(objectname, confidence):
+    print("Saving event: " + objectname + " with confidence: " + str(confidence))
     c = conn.cursor()
     c.execute("INSERT INTO events(date,object,confidence) VALUES (current_timestamp ,?,?)",
               [objectname, confidence])
