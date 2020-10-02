@@ -6,19 +6,18 @@ import keyboard
 from sys import argv
 
 
-def field(a, b):
-    if min(a, b) < 0:
-        return 0
-    else:
-        return a * b
-
-
 class DetectBox:
     def __init__(self, x, y, width, height):
         self.x = x
         self.width = width
         self.y = y
         self.height = height
+
+    def field(self, a, b):
+        if min(a, b) < 0:
+            return 0
+        else:
+            return a * b
 
     def coverage(self, x, y, width, height):
         x1 = max(self.x, x)
@@ -27,7 +26,7 @@ class DetectBox:
         y2 = max(self.y + self.height, y + height)
         common_width = (x2-x1)
         common_height = (y2-y1)
-        return field(common_width, common_height)/field(width, height)
+        return self.field(common_width, common_height)/self.field(width, height)
 
 
 class CameraConfig:
@@ -78,13 +77,13 @@ class CameraAnalyzer:
         output_layers = [layer_names[i[0] - 1] for i in self.yolo_config.net.getUnconnectedOutLayers()]
         return output_layers
 
-    def draw_bounding_box(self, image, class_id, confidence, x, y, x_plus_w, y_plus_h):
+    def draw_bounding_box(self, image, class_id, x, y, x_plus_w, y_plus_h):
         label = str(self.yolo_config.classes[class_id])
         color = self.yolo_config.colors[class_id]
-        cv2.rectangle(image, (x,y), (x_plus_w,y_plus_h), color, 2)
-        cv2.putText(image, label, (x-10,y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+        cv2.rectangle(image, (x, y), (x_plus_w, y_plus_h), color, 2)
+        cv2.putText(image, label, (x-10, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
-    def process_frame(self, image, index, repository):
+    def process_frame(self, image, repository):
         width = image.shape[1]
         height = image.shape[0]
 
@@ -120,7 +119,7 @@ class CameraAnalyzer:
                     label = str(self.yolo_config.classes[class_id])
 
                     if repository:
-                        repository.insert(label,str(confidence))
+                        repository.insert(label, str(confidence))
 
                     class_ids.append(class_id)
                     confidences.append(float(confidence))
@@ -140,9 +139,9 @@ class CameraAnalyzer:
             w = box[2]
             h = box[3]
 
-            self.draw_bounding_box(image, class_ids[i], confidences[i], round(x), round(y), round(x + w), round(y + h))
+            self.draw_bounding_box(image, class_ids[i], round(x), round(y), round(x + w), round(y + h))
 
-        self.draw_bounding_box(image, "detect box", 0.1, self.detect_box.x, self.detect_box.y,
+        self.draw_bounding_box(image, "detect box", self.detect_box.x, self.detect_box.y,
                                self.detect_box.x + self.detect_box.width, self.detect_box.y + self.detect_box.height)
 
         out_image_name = "Analyzer"
@@ -157,7 +156,7 @@ class CameraAnalyzer:
         ret, frame = self.camera_config.capture.read()
         if ret:
             begin_time = time.time()
-            boxes, class_ids, confidences = self.process_frame(frame, 1, repository)
+            boxes, class_ids, confidences = self.process_frame(frame, repository)
             process_time = 1.25*(time.time() - begin_time)/self.frames_per_process
 
             if process_time > 1.0/self.camera_config.fps:
@@ -168,12 +167,17 @@ class CameraAnalyzer:
             if show:
                 self.show_image(frame, boxes, class_ids, confidences)
 
-            print("\tExpected time: " + str(1.0/self.camera_config.fps) + ", Actual time: " + str(process_time) + ", Frames per process:  " + str(self.frames_per_process) + ", Frames per second: " + str(self.camera_config.fps))
+            print(
+                "\tExpected time: " + str(1.0/self.camera_config.fps) +
+                ", Actual time: " + str(process_time) +
+                ", Frames per process:  " + str(self.frames_per_process) +
+                ", Frames per second: " + str(self.camera_config.fps)
+            )
         cv2.waitKey(1)
 
     def video(self, repository=False, show=False):
 
-        print("Begin video proccessing...")
+        print("Begin video processing...")
         while not keyboard.is_pressed('q'):
             self.one_process_episode(repository, show)
                 
