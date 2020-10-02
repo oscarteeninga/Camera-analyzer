@@ -21,9 +21,9 @@ class DetectBox:
 
     def coverage(self, x, y, width, height):
         x1 = max(self.x, x)
-        y1 = min(self.y, y)
+        y1 = max(self.y, y)
         x2 = min(self.x + self.width, x + width)
-        y2 = max(self.y + self.height, y + height)
+        y2 = min(self.y + self.height, y + height)
         common_width = (x2-x1)
         common_height = (y2-y1)
         return self.field(common_width, common_height)/self.field(width, height)
@@ -112,6 +112,7 @@ class CameraAnalyzer:
                     x = center_x - w / 2
                     y = center_y - h / 2
 
+                    print(detect_box.coverage(x, y, w, h))
                     if detect_box.coverage(x, y, w, h) < 0.3:
                         continue
 
@@ -141,7 +142,7 @@ class CameraAnalyzer:
 
             self.draw_bounding_box(image, class_ids[i], round(x), round(y), round(x + w), round(y + h))
 
-        self.draw_bounding_box(image, "detect box", self.detect_box.x, self.detect_box.y,
+        self.draw_bounding_box(image, 80, self.detect_box.x, self.detect_box.y,
                                self.detect_box.x + self.detect_box.width, self.detect_box.y + self.detect_box.height)
 
         out_image_name = "Analyzer"
@@ -185,8 +186,8 @@ class CameraAnalyzer:
         cv2.destroyAllWindows()
 
 
-camera_config = CameraConfig("192.168.1.125", "admin", "camera123")
+camera_config = CameraConfig("192.168.0.119", "admin", "camera123")
 yolo_config = YoloConfig("bin/yolov3.weights", "yolov3.txt", "cfg/yolov3.cfg", int(argv[1]))
-detect_box = DetectBox(300, 300, 1000, 1000)
+detect_box = DetectBox(650, 600, 600, 600)
 camera_analyzer = CameraAnalyzer(camera_config, yolo_config, detect_box)
 camera_analyzer.video(False, True)
