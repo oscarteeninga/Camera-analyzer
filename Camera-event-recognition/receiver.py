@@ -5,6 +5,8 @@ import keyboard
 
 from sys import argv
 
+CONSOLE_INFO = 1
+
 
 class DetectBox:
     def __init__(self, x, y, width, height):
@@ -24,24 +26,29 @@ class DetectBox:
         y1 = max(self.y, y)
         x2 = min(self.x + self.width, x + width)
         y2 = min(self.y + self.height, y + height)
-        common_width = (x2-x1)
-        common_height = (y2-y1)
-        return self.field(common_width, common_height)/self.field(width, height)
+        common_width = (x2 - x1)
+        common_height = (y2 - y1)
+        return self.field(common_width, common_height) / self.field(width, height)
 
 
 class CameraConfig:
-    def __init__(self, camera_ip, camera_user, camera_password):
+    def __init__(self, camera_ip, camera_user, camera_password, fps=None):
         self.capture = cv2.VideoCapture('rtsp://' + camera_user + ':' + camera_password + '@' + camera_ip + ':554')
         b = time.time()
-        print("Checking FPS...")            
-        for _ in range(150):
-            self.capture.read()
-            print(b)
-        self.fps = int(150/(time.time()-b))
-        print("FPS set on: " + str(self.fps))
 
-    def set_fps(self, fps):
-        self.fps = fps
+        if CONSOLE_INFO == 1:
+            print("Checking FPS...")
+
+        if fps:
+            self.fps = fps
+        else:
+            for _ in range(150):
+                self.capture.read()
+
+            self.fps = int(150 / (time.time() - b))
+
+        if CONSOLE_INFO == 1:
+            print("FPS set on: " + str(self.fps))
 
 
 class YoloConfig:
@@ -66,10 +73,13 @@ class YoloConfig:
 
 class CameraAnalyzer:
 
-    def __init__(self, camera_config, yolo_config, detect_box):
+    def __init__(self, camera_config, yolo_config):
         self.frames_per_process = 1
         self.camera_config = camera_config
         self.yolo_config = yolo_config
+        self.detect_box = None
+
+    def set_detect_box(self, detect_box):
         self.detect_box = detect_box
 
     def get_output_layers(self):
@@ -81,17 +91,17 @@ class CameraAnalyzer:
         label = str(self.yolo_config.classes[class_id])
         color = self.yolo_config.colors[class_id]
         cv2.rectangle(image, (x, y), (x_plus_w, y_plus_h), color, 2)
-        cv2.putText(image, label, (x-10, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+        cv2.putText(image, label, (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
     def process_frame(self, image, repository):
         width = image.shape[1]
         height = image.shape[0]
 
         blob = cv2.dnn.blobFromImage(
-            image, self.yolo_config.scale, 
-            (self.yolo_config.batch_size, self.yolo_config.batch_size), 
+            image, self.yolo_config.scale,
+            (self.yolo_config.batch_size, self.yolo_config.batch_size),
             (0, 0, 0), True, crop=False)
-            
+
         self.yolo_config.net.setInput(blob)
         outs = self.yolo_config.net.forward(self.get_output_layers())
 
@@ -112,8 +122,7 @@ class CameraAnalyzer:
                     x = center_x - w / 2
                     y = center_y - h / 2
 
-                    print(detect_box.coverage(x, y, w, h))
-                    if detect_box.coverage(x, y, w, h) < 0.3:
+                    if detect_box and detect_box.coverage(x, y, w, h) < 0.3:
                         continue
 
                     # save event to database
@@ -142,14 +151,16 @@ class CameraAnalyzer:
 
             self.draw_bounding_box(image, class_ids[i], round(x), round(y), round(x + w), round(y + h))
 
-        self.draw_bounding_box(image, 80, self.detect_box.x, self.detect_box.y,
-                               self.detect_box.x + self.detect_box.width, self.detect_box.y + self.detect_box.height)
+        if self.detect_box:
+            self.draw_bounding_box(image, 80, self.detect_box.x, self.detect_box.y,
+                                   self.detect_box.x + self.detect_box.width,
+                                   self.detect_box.y + self.detect_box.height)
 
         out_image_name = "Analyzer"
         cv2.imshow(out_image_name, image)
 
     def skip_frames(self):
-        for _ in range(self.frames_per_process-1):
+        for _ in range(self.frames_per_process - 1):
             self.camera_config.capture.read()
 
     def one_process_episode(self, repository, show):
@@ -158,30 +169,33 @@ class CameraAnalyzer:
         if ret:
             begin_time = time.time()
             boxes, class_ids, confidences = self.process_frame(frame, repository)
-            process_time = 1.25*(time.time() - begin_time)/self.frames_per_process
+            process_time = 1.25 * (time.time() - begin_time) / self.frames_per_process
 
-            if process_time > 1.0/self.camera_config.fps:
-                self.frames_per_process += int(process_time*self.camera_config.fps)
+            if process_time > 1.0 / self.camera_config.fps:
+                self.frames_per_process += int(process_time * self.camera_config.fps)
             else:
                 if self.frames_per_process > 1:
                     self.frames_per_process -= 1
             if show:
                 self.show_image(frame, boxes, class_ids, confidences)
 
-            print(
-                "\tExpected time: " + str(1.0/self.camera_config.fps) +
-                ", Actual time: " + str(process_time) +
-                ", Frames per process:  " + str(self.frames_per_process) +
-                ", Frames per second: " + str(self.camera_config.fps)
-            )
+            if CONSOLE_INFO == 1:
+                print(
+                    "\tExpected time: " + str(1.0 / self.camera_config.fps) +
+                    ", Actual time: " + str(process_time) +
+                    ", Frames per process:  " + str(self.frames_per_process) +
+                    ", Frames per second: " + str(self.camera_config.fps)
+                )
         cv2.waitKey(1)
 
     def video(self, repository=False, show=False):
 
-        print("Begin video processing...")
+        if CONSOLE_INFO == 1:
+            print("Begin video processing...")
+
         while not keyboard.is_pressed('q'):
             self.one_process_episode(repository, show)
-                
+
         self.camera_config.capture.release()
         cv2.destroyAllWindows()
 
@@ -189,5 +203,6 @@ class CameraAnalyzer:
 camera_config = CameraConfig("192.168.0.119", "admin", "camera123")
 yolo_config = YoloConfig("bin/yolov3.weights", "yolov3.txt", "cfg/yolov3.cfg", int(argv[1]))
 detect_box = DetectBox(650, 600, 600, 600)
-camera_analyzer = CameraAnalyzer(camera_config, yolo_config, detect_box)
+camera_analyzer = CameraAnalyzer(camera_config, yolo_config)
+camera_analyzer.set_detect_box(detect_box)
 camera_analyzer.video(False, True)
