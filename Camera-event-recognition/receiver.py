@@ -163,26 +163,33 @@ class CameraAnalyzer:
         for _ in range(self.frames_per_process - 1):
             self.camera_config.capture.read()
 
+    def update_frames_per_process(self, begin_time):
+        process_time = 1.25 * (time.time() - begin_time) / self.frames_per_process
+
+        if process_time > 1.0 / self.camera_config.fps:
+            self.frames_per_process += int(process_time * self.camera_config.fps)
+        else:
+            if self.frames_per_process > 1:
+                self.frames_per_process -= 1
+
+        return process_time
+
     def one_process_episode(self, repository, show):
         self.skip_frames()
         ret, frame = self.camera_config.capture.read()
         if ret:
             begin_time = time.time()
             boxes, class_ids, confidences = self.process_frame(frame, repository)
-            process_time = 1.25 * (time.time() - begin_time) / self.frames_per_process
 
-            if process_time > 1.0 / self.camera_config.fps:
-                self.frames_per_process += int(process_time * self.camera_config.fps)
-            else:
-                if self.frames_per_process > 1:
-                    self.frames_per_process -= 1
+            process_time = self.update_frames_per_process(begin_time)
+
             if show:
                 self.show_image(frame, boxes, class_ids, confidences)
 
             if CONSOLE_INFO == 1:
                 print(
-                    "\tExpected time: " + str(1.0 / self.camera_config.fps) +
-                    ", Actual time: " + str(process_time) +
+                    "\tExpected time: " + str(round(1.0 / self.camera_config.fps, 3)) + " s"
+                    ", Actual time: " + str(round(process_time, 3)) + " s"
                     ", Frames per process:  " + str(self.frames_per_process) +
                     ", Frames per second: " + str(self.camera_config.fps)
                 )
@@ -200,9 +207,9 @@ class CameraAnalyzer:
         cv2.destroyAllWindows()
 
 
-camera_config = CameraConfig("192.168.0.119", "admin", "camera123")
+camera_config = CameraConfig("192.168.0.119", "admin", "camera123", 25)
 yolo_config = YoloConfig("bin/yolov3.weights", "yolov3.txt", "cfg/yolov3.cfg", int(argv[1]))
-detect_box = DetectBox(650, 600, 600, 600)
+detect_box = DetectBox(300, 300, 600, 600)
 camera_analyzer = CameraAnalyzer(camera_config, yolo_config)
 camera_analyzer.set_detect_box(detect_box)
 camera_analyzer.video(False, True)
