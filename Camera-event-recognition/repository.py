@@ -1,24 +1,22 @@
 import sqlite3
 
-conn = sqlite3.connect("../data.db")
 
-c = conn.cursor()
+class Repository:
+    def __init__(self, data_base):
+        self.conn = sqlite3.connect(data_base)
+        self.c = self.conn.cursor()
+        self.c.execute('''CREATE TABLE IF NOT EXISTS events
+                     (date datetime, confidence varchar(50), object varchar(50))''')
+        self.conn.commit()
 
-c.execute('''CREATE TABLE IF NOT EXISTS events
-             (date datetime, confidence varchar(50), object varchar(50))''')
+    def insert(self, objectname, confidence):
+        print("Saving event: " + objectname + " with confidence: " + str(confidence))
+        self.c = self.conn.cursor()
+        self.c.execute("INSERT INTO events(date,object,confidence) VALUES (current_timestamp ,?,?)",
+                  [objectname, confidence])
+        self.conn.commit()
 
-conn.commit()
-
-
-def insert(objectname, confidence):
-    print("Saving event: " + objectname + " with confidence: " + str(confidence))
-    c = conn.cursor()
-    c.execute("INSERT INTO events(date,object,confidence) VALUES (current_timestamp ,?,?)",
-              [objectname, confidence])
-    conn.commit()
-
-
-def read():
-    cur = conn.cursor()
-    cur.execute("select object,date,confidence from events")
-    return cur.fetchall()
+    def read(self):
+        cur = self.conn.cursor()
+        cur.execute("select object,date,confidence from events")
+        return cur.fetchall()

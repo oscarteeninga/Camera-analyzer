@@ -3,8 +3,6 @@ import numpy as np
 import time
 import keyboard
 
-from sys import argv
-
 CONSOLE_INFO = 1
 
 
@@ -73,10 +71,11 @@ class YoloConfig:
 
 class CameraAnalyzer:
 
-    def __init__(self, camera_config, yolo_config):
+    def __init__(self, camera_config, yolo_config, repository=None):
         self.frames_per_process = 1
         self.camera_config = camera_config
         self.yolo_config = yolo_config
+        self.repository = repository
         self.detect_box = None
 
     def set_detect_box(self, detect_box):
@@ -93,7 +92,7 @@ class CameraAnalyzer:
         cv2.rectangle(image, (x, y), (x_plus_w, y_plus_h), color, 2)
         cv2.putText(image, label, (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
-    def process_frame(self, image, repository):
+    def process_frame(self, image, store):
         width = image.shape[1]
         height = image.shape[0]
 
@@ -122,14 +121,14 @@ class CameraAnalyzer:
                     x = center_x - w / 2
                     y = center_y - h / 2
 
-                    if detect_box and detect_box.coverage(x, y, w, h) < 0.3:
+                    if self.detect_box and self.detect_box.coverage(x, y, w, h) < 0.3:
                         continue
 
                     # save event to database
                     label = str(self.yolo_config.classes[class_id])
 
-                    if repository:
-                        repository.insert(label, str(confidence))
+                    if store and self.repository:
+                        self.repository.insert(label, str(confidence))
 
                     class_ids.append(class_id)
                     confidences.append(float(confidence))
@@ -207,9 +206,4 @@ class CameraAnalyzer:
         cv2.destroyAllWindows()
 
 
-camera_config = CameraConfig("192.168.0.119", "admin", "camera123", 25)
-yolo_config = YoloConfig("bin/yolov3.weights", "yolov3.txt", "cfg/yolov3.cfg", int(argv[1]))
-detect_box = DetectBox(300, 300, 600, 600)
-camera_analyzer = CameraAnalyzer(camera_config, yolo_config)
-camera_analyzer.set_detect_box(detect_box)
-camera_analyzer.video(False, True)
+
