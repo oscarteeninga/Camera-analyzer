@@ -50,7 +50,10 @@ class CameraConfig:
 
 
 class YoloConfig:
-    def __init__(self, weights_file, classes_file, config_file, batch_size):
+    def __init__(self, batch_size,
+                 weights_file="bin/yolov3.weights",
+                 classes_file="yolov3.txt",
+                 config_file="cfg/yolov3.cfg"):
         self.classes_file = classes_file
         self.config_file = config_file
         self.weights_file = weights_file
@@ -124,11 +127,10 @@ class CameraAnalyzer:
                     if self.detect_box and self.detect_box.coverage(x, y, w, h) < 0.3:
                         continue
 
-                    # save event to database
                     label = str(self.yolo_config.classes[class_id])
 
                     if store and self.repository:
-                        self.repository.insert(label, str(confidence))
+                        self.repository.insert(label, str(confidence), x, y, w, h)
 
                     class_ids.append(class_id)
                     confidences.append(float(confidence))
