@@ -1,12 +1,15 @@
-class Configurator:             # TODO
+class Configurator:
     def __init__(self, config_file='configurations.csv'):
         self.config_file = config_file
 
     def get_configurations(self):
         with open(self.config_file, 'r') as f:
-            configs = [line.strip() for line in f.readlines()]
+            configs = {}
             f.close()
             return configs
+
+    def find_configuration(self, camera_ip):
+        self.get_configurations().get(camera_ip)
 
     def add_configuration(self, configuration):
         with open(self.config_file, 'w') as f:

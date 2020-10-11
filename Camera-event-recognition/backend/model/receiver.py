@@ -31,10 +31,10 @@ class DetectBox:
 
 class CameraAnalyzer:
 
-    def __init__(self, camera_config, yolo_config, repository=None):
+    def __init__(self, configuration, repository=None):
         self.frames_per_process = 1
-        self.camera_config = camera_config
-        self.yolo_config = yolo_config
+        self.camera_config = configuration.camera_config
+        self.yolo_config = configuration.yolo_config
         self.repository = repository
         self.detect_box = None
 
