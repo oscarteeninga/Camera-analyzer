@@ -163,6 +163,3 @@ class CameraAnalyzer:
 
         self.camera_config.capture.release()
         cv2.destroyAllWindows()
-
-
-
