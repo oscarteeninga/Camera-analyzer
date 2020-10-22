@@ -1,0 +1,2 @@
+192.168.1.119,admin,camera123,608,yolo/bin/yolov3.weights,yolo/cfg/yolov3.txt,yolo/cfg/yolov3.cfg
+192.168.1.121,admin1,camera1234,608,yolo/bin/yolov3.weights,yolo/cfg/yolov3.txt,yolo/cfg/yolov3.cfg

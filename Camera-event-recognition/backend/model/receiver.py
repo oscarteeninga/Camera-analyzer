@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 import time
-import keyboard
 
 CONSOLE_INFO = 1
 
@@ -37,6 +36,7 @@ class CameraAnalyzer:
         self.yolo_config = configuration.yolo_config
         self.repository = repository
         self.detect_box = None
+        self.fps = self.camera_config.fps
 
     def set_detect_box(self, detect_box):
         self.detect_box = detect_box
@@ -124,8 +124,8 @@ class CameraAnalyzer:
     def update_frames_per_process(self, begin_time):
         process_time = 1.25 * (time.time() - begin_time) / self.frames_per_process
 
-        if process_time > 1.0 / self.camera_config.fps:
-            self.frames_per_process += int(process_time * self.camera_config.fps)
+        if process_time > 1.0 / self.fps:
+            self.frames_per_process += int(process_time * self.fps)
         else:
             if self.frames_per_process > 1:
                 self.frames_per_process -= 1
@@ -134,7 +134,7 @@ class CameraAnalyzer:
 
     def one_process_episode(self, repository, show):
         self.skip_frames()
-        ret, frame = self.camera_config.capture.read()
+        ret, frame = self.camera_config.capture().read()
         if ret:
             begin_time = time.time()
             boxes, class_ids, confidences = self.process_frame(frame, repository)
@@ -146,10 +146,10 @@ class CameraAnalyzer:
 
             if CONSOLE_INFO == 1:
                 print(
-                    "\tExpected time: " + str(round(1.0 / self.camera_config.fps, 3)) + " s"
+                    "\tExpected time: " + str(round(1.0 / self.fps, 3)) + " s"
                     ", Actual time: " + str(round(process_time, 3)) + " s"
                     ", Frames per process:  " + str(self.frames_per_process) +
-                    ", Frames per second: " + str(self.camera_config.fps)
+                    ", Frames per second: " + str(self.fps)
                 )
         cv2.waitKey(1)
 
@@ -158,8 +158,5 @@ class CameraAnalyzer:
         if CONSOLE_INFO == 1:
             print("Begin video processing...")
 
-        while not keyboard.is_pressed('q'):
+        while True:
             self.one_process_episode(repository, show)
-
-        self.camera_config.capture.release()
-        cv2.destroyAllWindows()
