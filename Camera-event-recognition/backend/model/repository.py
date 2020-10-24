@@ -20,4 +20,5 @@ class Repository:
     def read(self):
         cur = self.conn.cursor()
         cur.execute("select object,date,confidence from events")
-        return cur.fetchall()
+        values = str(cur.fetchall())
+        return values
