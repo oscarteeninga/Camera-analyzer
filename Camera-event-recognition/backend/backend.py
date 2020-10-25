@@ -55,14 +55,23 @@ def state():
             s = "on"
         states[config_ip] = s
     return str(states)
-
+@app.route('/state/<camera_id>')
+def state_single_camera(camera_id):
+    config_ips = Configurator().get_configurations().keys()
+    if camera_id not in config_ips:
+        return "",404
+    if receivers.get(camera_id):
+        return str("on")
+    else:
+        return str("off")
 
 @app.route('/on/<camera_id>')
 def start(camera_id):
     configuration = Configurator().find_configuration(camera_id)
     if configuration is None:
-        return "Receiver not found"
+        return "Receiver not found",404
     else:
+        # TODO check if already started
         camera_analyzer = CameraAnalyzer(configuration)
         thread = threading.Thread(target=camera_analyzer.video, args=(True, True,))
         thread.start()
