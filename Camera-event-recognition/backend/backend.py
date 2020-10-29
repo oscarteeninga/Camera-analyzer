@@ -75,7 +75,7 @@ def events():
 
 @app.route('/on', methods=['POST'])
 def start():
-    for conf in Configurator.get_configurations():
+    for conf in Configurator().get_configurations():
         camera_analyzer = CameraAnalyzer(conf.camera_id)
         thread = threading.Thread(target=camera_analyzer.video, args=(True, True,))
         thread.start()
