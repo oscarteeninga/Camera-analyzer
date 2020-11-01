@@ -87,7 +87,7 @@ class CameraAnalyzer:
                     label = str(self.yolo_config.classes[class_id])
 
                     if store and self.repository:
-                        self.repository.insert(label, str(confidence), x, y, w, h)
+                        self.repository.insert_into_events(label, str(confidence), x, y, w, h)
 
                     class_ids.append(class_id)
                     confidences.append(float(confidence))
@@ -119,7 +119,7 @@ class CameraAnalyzer:
 
     def skip_frames(self):
         for _ in range(self.frames_per_process - 1):
-            self.camera_config.capture.read()
+            self.camera_config.capture.read_events()
 
     def update_frames_per_process(self, begin_time):
         process_time = 1.25 * (time.time() - begin_time) / self.frames_per_process
@@ -134,7 +134,7 @@ class CameraAnalyzer:
 
     def one_process_episode(self, repository, show):
         self.skip_frames()
-        ret, frame = self.camera_config.capture().read()
+        ret, frame = self.camera_config.capture().read_events()
         if ret:
             begin_time = time.time()
             boxes, class_ids, confidences = self.process_frame(frame, repository)

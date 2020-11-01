@@ -3,6 +3,7 @@ import threading
 from config.configuration import Configuration
 from config.configurator import Configurator
 from eventservice import EventService
+from areaservice import AreaService
 from flask import Flask, request, render_template, jsonify
 from model.receiver import CameraAnalyzer
 
@@ -10,7 +11,8 @@ receivers = {}
 
 app = Flask(__name__)
 
-eventservice = EventService()
+event_service = EventService()
+area_service = AreaService()
 
 
 @app.route("/")
@@ -70,7 +72,7 @@ def state_single_camera(camera_id):
 
 @app.route('/events')
 def events():
-    return jsonify(eventservice.get_events())
+    return event_service.get_events()
 
 
 @app.route('/on', methods=['POST'])
@@ -112,3 +114,8 @@ def stop_single_camera(camera_id):
     # thread.stop() ##TODO
     receivers[camera_id] = None
     return "Analyzer " + camera_id + " stopped"
+
+
+@app.route('/areas', methods=['GET'])
+def areas():
+    return area_service.get_areas()
