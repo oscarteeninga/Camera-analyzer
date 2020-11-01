@@ -3,7 +3,7 @@ import sqlite3
 
 class Repository:
     def __init__(self, data_base):
-        self.conn = sqlite3.connect(data_base)
+        self.conn = sqlite3.connect(data_base, check_same_thread=False)
         self.c = self.conn.cursor()
         self.c.execute('''CREATE TABLE IF NOT EXISTS events
                      (date datetime, confidence varchar(50), object varchar(50), 
