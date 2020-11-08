@@ -20,9 +20,12 @@ class Repository:
                        [objectname, confidence, x, y, w, h])
         self.conn.commit()
 
-    def read_events(self):
+    def read_events(self, date_from):
         cur = self.conn.cursor()
-        cur.execute("select * from events")
+        query = "select * from events"
+        if date_from is not None:
+            query += " where date > " + date_from
+        cur.execute(query)
         values = cur.fetchall()
         return values
 

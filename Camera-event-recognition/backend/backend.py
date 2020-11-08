@@ -70,9 +70,10 @@ def state_single_camera(camera_id):
         return jsonify("off")
 
 
-@app.route('/events')
+@app.route('/events', methods=['GET'])
 def events():
-    return event_service.get_events()
+    date_from = request.args.get("date_from")
+    return event_service.get_events(date_from)
 
 
 @app.route('/on', methods=['POST'])

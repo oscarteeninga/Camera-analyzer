@@ -11,8 +11,8 @@ class EventService:
     def __init__(self):
         self.repository = Repository(DATABASE)
 
-    def get_events(self):
-        database_events = self.repository.read_events()
+    def get_events(self, date_from):
+        database_events = self.repository.read_events(date_from)
         # self.repository.insert_into_events("human", 1, 10,10,10,10)
         # self.repository.insert_into_events("human", 1, 10, 10, 5, 5)
         # self.repository.insert_into_events("human", 1, 10, 10, 20, 20)
