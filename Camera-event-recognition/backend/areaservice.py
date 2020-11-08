@@ -1,7 +1,7 @@
 import json
 
+from model.receiver import DetectBox
 from model.repository import Repository
-from receiver import DetectBox
 
 DATABASE = "areas"
 
