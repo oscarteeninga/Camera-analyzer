@@ -19,8 +19,11 @@ class YoloConfig:
 
         self.colors = np.random.uniform(0, 255, size=(len(self.classes), 3))
 
-    def net(self):
-        return cv2.dnn.readNet(self.weights_file, self.config_file)
+        self.net = cv2.dnn.readNet(self.weights_file, self.config_file)
+
+    @classmethod
+    def basic(cls):
+        return YoloConfig(608, "yolo/bin/yolov3.weights", "yolo/cfg/yolov3.txt", "yolo/cfg/yolov3.cfg")
 
     def __str__(self):
         return str(self.batch_size) + "," + self.weights_file + "," + self.classes_file + "," + self.config_file

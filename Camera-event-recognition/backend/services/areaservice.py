@@ -1,15 +1,15 @@
 import json
 
-from cameraservice import CameraService
+from services.cameraservice import CameraService
 from model.receiver import DetectBox
-from model.repository import Repository
-DATABASE = "areas"
+from repositories.repositories import AreasRepository, DATABASE
 
 camera_service = CameraService()
 
+
 class AreaService:
     def __init__(self):
-        self.repository = Repository(DATABASE)
+        self.repository = AreasRepository(DATABASE)
 
     def get_areas(self):
         database_areas = self.repository.read_areas()

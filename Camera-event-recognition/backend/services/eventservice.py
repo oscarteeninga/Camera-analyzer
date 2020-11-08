@@ -1,17 +1,16 @@
 import json
 
-from areaservice import AreaService
-from cameraservice import CameraService
-from model.repository import Repository
+from services.areaservice import AreaService
+from services.cameraservice import CameraService
+from repositories.repositories import EventsRepository, DATABASE
 
-DATABASE = "events"
 area_service = AreaService()
 camera_service = CameraService()
 
 
 class EventService:
     def __init__(self):
-        self.repository = Repository(DATABASE)
+        self.repository = EventsRepository(DATABASE)
 
     def get_events(self, date_from):
         database_events = self.repository.read_events(date_from)

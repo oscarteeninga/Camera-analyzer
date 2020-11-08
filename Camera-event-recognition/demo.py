@@ -2,7 +2,7 @@ from model.receiver import CameraAnalyzer, DetectBox
 from config.yoloconfig import YoloConfig
 from config.cameraconfig import CameraConfig
 from config.configuration import Configuration
-from model.repository import Repository
+from repositories.repositories import Repository
 from sys import argv
 
 repository = Repository("demo.db")
