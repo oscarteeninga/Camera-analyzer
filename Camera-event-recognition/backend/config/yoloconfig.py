@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 
-
 class YoloConfig:
     def __init__(self, batch_size, weights_file, classes_file, config_file):
         self.classes_file = classes_file
@@ -14,6 +13,7 @@ class YoloConfig:
         self.nms_threshold = 0.3
 
         self.classes = None
+
         with open(self.classes_file, 'r') as f:
             self.classes = [line.strip() for line in f.readlines()]
 
@@ -23,7 +23,7 @@ class YoloConfig:
 
     @classmethod
     def basic(cls):
-        return YoloConfig(608, "yolo/bin/yolov3.weights", "yolo/cfg/yolov3.txt", "yolo/cfg/yolov3.cfg")
+        return YoloConfig(608, "yolov3.weights", "yolov3.txt", "yolov3.cfg")
 
     def __str__(self):
         return str(self.batch_size) + "," + self.weights_file + "," + self.classes_file + "," + self.config_file
