@@ -8,116 +8,150 @@ from model.receiver import CameraAnalyzer
 
 receivers = {}
 
-app = Flask(__name__)
-
+flask_app = Flask(__name__)
+app = Api(app=flask_app, title="Camera Api", default="Camera Api", default_label="Camera Api")
 event_service = EventService()
 area_service = AreaService()
 camera_service = CameraService()
+configuration_name_space = app.namespace('Configuration', description='Cameras configuration')
+camera_post = app.model('Camera configuration params', {
+    'camera_ip': fields.String(required=True, description='Camera ip address'),
+    'camera_name': fields.String(required=True, description='Name of the camera'),
+    'camera_user': fields.String(required=True, description='Camera user'),
+    'camera_password': fields.String(required=True, description='Password to camera'),
+    'camera_fps': fields.Integer(required=True, description='Frames per second that camera will run'),
+})
 
 
-@app.route("/")
-def index():
-    return render_template('index.html')
-
-
-@app.route('/config/add', methods=['POST'])
-def add_config():
-    ip = request.form['camera_ip']
-    username = request.form['camera_user']
-    password = request.form['camera_password']
-    fps = request.form['camera_fps']
-    camera_service.add_config(CameraConfig(ip, username, password, fps))
-
-
-@app.route('/config/<camera_id>')
-def get_config(camera_id):
-    return jsonify(camera_service.get_config(camera_id))
-
-
-@app.route('/configs')
-def get_configs():
-    return jsonify(list(camera_service.get_configs()))
+@app.route("/events")
+class Events(Resource):
+    @app.doc(params={'date_from': 'Oldest date from which events are downloaded'})
+    def get(self):
+        """Return list of events at a given time"""
+        date_from = request.args.get("date_from")
+        return event_service.get_events(date_from)
 
 
 @app.route('/devices')
-def devices():
-    return jsonify(list(camera_service.get_ips()))
+class Devices(Resource):
+    def get(self):
+        """Returns list of devices"""
+        return jsonify(list(camera_service.get_ips()))
 
 
 @app.route('/state')
-def state():
-    states = {}
-    for conf in camera_service.get_configs():
-        s = "off"
-        if receivers.get(conf):
-            s = "on"
-        states[conf] = s
-    return jsonify(states)
+class States(Resource):
+    def get(self):
+        """"Get states of all cameras"""
+        states = {}
+        for conf in camera_service.get_configs():
+            s = "off"
+            if receivers.get(conf.name):
+                s = "on"
+            states[conf.name] = s
+        return jsonify(states)
 
 
-@app.route('/state/<camera_id>')
-def state_single_camera(camera_id):
-    conf = camera_service.get_config(camera_id)
-    if conf is None:
-        return "Camera does not exists", 404
-    elif conf in receivers.keys():
-        return jsonify("on")
-    else:
-        return jsonify("off")
+@app.route("/state/<string:camera_id>")
+class State(Resource):
+    @app.doc(params={'camera_id': 'Id of camera which state will be returned'})
+    def get(self, camera_id):
+        """Get state of camera with given id"""
+        conf = camera_service.get_config(camera_id, api=True)
+        if conf is None:
+            return "Camera does not exists", 404
+        elif conf in receivers.keys():
+            return jsonify("on")
+        else:
+            return jsonify("off")
 
 
-@app.route('/events', methods=['GET'])
-def events():
-    date_from = request.args.get("date_from")
-    return event_service.get_events(date_from)
+@app.route("/start")
+class StartAll(Resource):
+    def post(self):
+        """Start all cameras registered in the system"""
+        for conf in camera_service.get_configs():
+            camera_analyzer = CameraAnalyzer(conf)
+            process = multiprocessing.Process(target=camera_analyzer.video, args=(True, True,))
+            process.start()
+            receivers[conf.name] = process
 
 
-@app.route('/on', methods=['POST'])
-def start():
-    for conf in camera_service.get_configs():
-        camera_analyzer = CameraAnalyzer(conf)
-        process = multiprocessing.Process(target=camera_analyzer.video, args=(True, True,))
-        process.start()
-        receivers[conf] = process
-        return ""
+@app.route('/on/<camera_id>')
+class startSingleCamera(Resource):
+    @app.doc(params={'camera_id': 'Id of camera which will be started'})
+    def post(self, camera_id):
+        """Start camera with given id"""
+        conf = camera_service.get_config(camera_id)
+        if conf is None:
+            return "Receiver not found", 404
+        elif conf in receivers.keys():
+            return "Analyzer already started"
+        else:
+            camera_analyzer = CameraAnalyzer(conf)
+            process = multiprocessing.Process(target=camera_analyzer.video, args=(True, True,))
+            process.start()
+            receivers[conf] = process
+            return "Analyzer " + camera_id + " started!"
 
 
-@app.route('/on/<camera_id>', methods=['POST'])
-def start_single_camera(camera_id):
-    conf = camera_service.get_config(camera_id)
-    if conf is None:
-        return "Receiver not found", 404
-    elif conf in receivers.keys():
-        return "Analyzer already started"
-    else:
-        camera_analyzer = CameraAnalyzer(conf)
-        process = multiprocessing.Process(target=camera_analyzer.video, args=(True, True,))
-        process.start()
-        receivers[conf] = process
-        return "Analyzer " + camera_id + " started!"
+@app.route('/off/<camera_id>')
+class stopSingleCamera(Resource):
+    @app.doc(params={'camera_id': 'Id of camera which will be stopped'})
+    def post(self, camera_id):
+        """Stop camera with given id"""
+        conf = camera_service.get_config(camera_id)
+        if conf is None:
+            return "Receiver not found"
+        elif conf not in receivers.keys():
+            return "Analyzer already stopped"
+        else:
+            receivers[conf].terminate()
+            receivers.pop(conf)
+            return "Analyzer " + camera_id + " stopped"
 
 
-@app.route('/off', methods=['POST'])
-def stop():
-    for process in receivers:
-        process.terminate()
-    receivers.clear()
-    return ""
+@app.route('/off')
+class StopCamera(Resource):
+    def post(self):
+        """Stop all cameras"""
+        for process in receivers:
+            process.terminate()
+        receivers.clear()
 
 
-@app.route('/off/<camera_id>', methods=['POST'])
-def stop_single_camera(camera_id):
-    conf = camera_service.get_config(camera_id)
-    if conf is None:
-        return "Receiver not found"
-    elif conf not in receivers.keys():
-        return "Analyzer already stopped"
-    else:
-        receivers[conf].terminate()
-        receivers.pop(conf)
-        return "Analyzer " + camera_id + " stopped"
+@configuration_name_space.route("/")
+class CameraConfiguration(Resource):
+    @app.expect(camera_post)
+    def post(self):
+        """Create configuration of camera"""
+        ip = request.json['camera_ip']
+        username = request.json['camera_user']
+        password = request.json['camera_password']
+        fps = int(request.json['camera_fps'])
+        name = request.json['camera_name']
+        camera_service.add_config(CameraConfig(name, ip, username, password, fps))
+
+    @app.doc(params={'id': 'Id of camera which the configuration is returned'})
+    def get(self):
+        """Get configuration of camera"""
+        id = request.args.get("id")
+        return camera_service.get_config(id, api=True).serialize()
 
 
-@app.route('/areas', methods=['GET'])
-def areas():
-    return jsonify(area_service.get_areas())
+@configuration_name_space.route('/all')
+class CameraConfigurations(Resource):
+    def get(self):
+        """Get all configurations of cameras"""
+        return [config.serialize() for config in camera_service.get_configs()]
+
+
+@configuration_name_space.route('/areas')
+class Area(Resource):
+    def get(self):
+        """Get all area"""
+        return jsonify(area_service.get_areas())
+
+#
+
+#

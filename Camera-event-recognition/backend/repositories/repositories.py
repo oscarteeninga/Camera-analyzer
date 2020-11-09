@@ -8,7 +8,7 @@ class CamerasRepository:
         self.c = self.conn.cursor()
         self.conn = sqlite3.connect(data_base, check_same_thread=False)
         self.c.execute('''CREATE TABLE IF NOT EXISTS cameras
-                                     (id INTEGER, camera_name varchar(50), ip varchar(50), username varchar(50), password varchar(50), fps integer,  PRIMARY KEY(id))''')
+                                     (id INTEGER, name varchar(50), ip varchar(50), username varchar(50), password varchar(50), fps integer,  PRIMARY KEY(id))''')
         self.conn.commit()
 
     def insert_camera(self, name, ip, username, password, fps):
@@ -19,10 +19,10 @@ class CamerasRepository:
 
     def read_camera(self, id):
         cur = self.conn.cursor()
-        query = "select name from cameras where ip = " + str(id)
+        query = "select * from cameras where id = " + str(id)
         cur.execute(query)
 
-        return cur.fetchone()[0]
+        return cur.fetchone()
 
     def read_cameras(self):
         cur = self.conn.cursor()

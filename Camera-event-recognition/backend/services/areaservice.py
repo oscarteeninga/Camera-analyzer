@@ -35,7 +35,7 @@ class AreaService:
                 "y": area[3],
                 "width": area[4],
                 "height": area[5],
-                "camera" : camera_service.get_camera_name(area[6])
+                "camera": camera_service.get_camera_name(area[6], api=True)
             }
             jsons.append(dic)
         return json.dumps(jsons)
