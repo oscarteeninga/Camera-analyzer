@@ -1,10 +1,13 @@
 import multiprocessing
-from services.cameraservice import CameraService
+
+from flask import Flask, request, jsonify
+from flask_restplus import Api, fields, Resource
+
 from config.cameraconfig import CameraConfig
-from services.eventservice import EventService
-from services.areaservice import AreaService
-from flask import Flask, request, render_template, jsonify
 from model.receiver import CameraAnalyzer
+from services.areaservice import AreaService
+from services.cameraservice import CameraService
+from services.eventservice import EventService
 
 receivers = {}
 
