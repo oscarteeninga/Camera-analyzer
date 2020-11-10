@@ -1,7 +1,7 @@
-import cv2
-import numpy as np
 import time
 
+import cv2
+import numpy as np
 from config.yoloconfig import YoloConfig
 
 CONSOLE_INFO = 1
@@ -32,9 +32,11 @@ class DetectBox:
 
 class CameraAnalyzer:
 
-    def __init__(self, camera_config, repository=None, yolo_config=YoloConfig.basic()):
+    def __init__(self, camera_config, repository=None, yolo_config=None):
         self.frames_per_process = 1
         self.camera_config = camera_config
+        if yolo_config is None:
+            yolo_config = YoloConfig.basic()
         self.yolo_config = yolo_config
         self.repository = repository
         self.detect_box = None

@@ -5,8 +5,8 @@ DATABASE = "db"
 
 class CamerasRepository:
     def __init__(self, data_base):
-        self.c = self.conn.cursor()
         self.conn = sqlite3.connect(data_base, check_same_thread=False)
+        self.c = self.conn.cursor()
         self.c.execute('''CREATE TABLE IF NOT EXISTS cameras
                                      (id INTEGER, name varchar(50), ip varchar(50), username varchar(50), password varchar(50), fps integer,  PRIMARY KEY(id))''')
         self.conn.commit()
@@ -32,8 +32,8 @@ class CamerasRepository:
 
 class AreasRepository:
     def __init__(self, data_base):
-        self.c = self.conn.cursor()
         self.conn = sqlite3.connect(data_base, check_same_thread=False)
+        self.c = self.conn.cursor()
         self.c.execute('''CREATE TABLE IF NOT EXISTS areas
                              (name varchar(1), confidence_required varchar(50),
                              x integer, y integer, w integer, h integer, camera_id INTEGER, FOREIGN KEY(camera_id) REFERENCES camera(id))''')
