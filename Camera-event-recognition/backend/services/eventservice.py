@@ -13,8 +13,8 @@ class EventService:
         self.repository = EventsRepository(DATABASE)
         self.repository.insert_event('car', 0.4, 0, 0, 100, 100, None)
 
-    def get_events(self, date_from):
-        database_events = self.repository.read_events(date_from)
+    def get_events(self, page, size, date_from):
+        database_events = self.repository.read_events(page, size, date_from)
         return self.parse_events(database_events)
 
     def parse_events(self, events):

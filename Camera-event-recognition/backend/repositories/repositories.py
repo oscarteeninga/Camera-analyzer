@@ -71,11 +71,17 @@ class EventsRepository:
             [timestamp, objectname, confidence, x, y, w, h, camera_id])
         self.conn.commit()
 
-    def read_events(self, date_from=None):
+    def read_events(self, page=None, size=None, date_from=None):
         cur = self.conn.cursor()
+        if size is None:
+            size = 20
+        if page is None:
+            page = 0
         query = "select * from events"
         if date_from is not None:
             query += " where date > %s" % date_from
+        limitq = " limit %d,%d" % ((page * size), size)
+        query += limitq
         cur.execute(query)
         values = cur.fetchall()
         return values

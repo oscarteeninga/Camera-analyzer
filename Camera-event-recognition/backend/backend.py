@@ -1,9 +1,8 @@
 import threading
 
+from config.cameraconfig import CameraConfig
 from flask import Flask, request, jsonify
 from flask_restplus import Api, fields, Resource
-
-from config.cameraconfig import CameraConfig
 from model.receiver import CameraAnalyzer
 from services.areaservice import AreaService
 from services.cameraservice import CameraService
@@ -32,7 +31,17 @@ class Events(Resource):
     def get(self):
         """Return list of events at a given time"""
         date_from = request.args.get("date_from")
-        return event_service.get_events(date_from)
+        pagearg = request.args.get("page")
+        if pagearg is not None:
+            page = int(pagearg)
+        else:
+            page = None
+        sizearg = request.args.get("size")
+        if sizearg is not None:
+            size = int(sizearg)
+        else:
+            size = None
+        return event_service.get_events(page, size, date_from)
 
 
 @app.route('/devices')
