@@ -1,4 +1,5 @@
 import sqlite3
+import time
 
 DATABASE = "db"
 
@@ -57,15 +58,17 @@ class EventsRepository:
         self.conn = sqlite3.connect(data_base, check_same_thread=False)
         self.c = self.conn.cursor()
         self.c.execute('''CREATE TABLE IF NOT EXISTS events
-                     (date datetime, confidence varchar(50), object varchar(50), 
+                     (date bigint, confidence varchar(50), object varchar(50), 
                      x integer, y integer, w integer, h integer, camera_id INTEGER,  FOREIGN KEY(camera_id) REFERENCES camera(id))''')
         self.conn.commit()
 
-    def insert_event(self, objectname, confidence, x, y, w, h):
+    def insert_event(self, objectname, confidence, x, y, w, h, camera_id):
         print("Saving event: " + objectname + " with confidence: " + str(confidence))
         self.c = self.conn.cursor()
-        self.c.execute("INSERT INTO events(date,object,confidence, x, y, w, h) VALUES (current_timestamp ,?,?,?,?,?,?)",
-                       [objectname, confidence, x, y, w, h])
+        timestamp = time.time() * 1000
+        self.c.execute(
+            "INSERT INTO events(date,object,confidence, x, y, w, h,camera_id) VALUES (?,?,?,?,?,?,?,?)",
+            [timestamp, objectname, confidence, x, y, w, h, camera_id])
         self.conn.commit()
 
     def read_events(self, date_from=None):
