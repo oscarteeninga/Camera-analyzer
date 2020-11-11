@@ -3,6 +3,7 @@ import time
 import cv2
 import numpy as np
 from config.yoloconfig import YoloConfig
+from config.cameraconfig import CameraConfig
 
 CONSOLE_INFO = 1
 
@@ -32,7 +33,7 @@ class DetectBox:
 
 class CameraAnalyzer:
 
-    def __init__(self, camera_config, repository=None, yolo_config=None):
+    def __init__(self, camera_config: CameraConfig, repository=None, yolo_config=None):
         self.frames_per_process = 1
         self.camera_config = camera_config
         if yolo_config is None:
@@ -41,13 +42,19 @@ class CameraAnalyzer:
         self.repository = repository
         self.detect_box = None
         self.fps = self.camera_config.fps
+        self.on = True
+        self.capture = camera_config.capture()
+        self.net = yolo_config.net()
+
+    def stop(self):
+        self.on = False
 
     def set_detect_box(self, detect_box):
         self.detect_box = detect_box
 
     def get_output_layers(self):
-        layer_names = self.yolo_config.net.getLayerNames()
-        output_layers = [layer_names[i[0] - 1] for i in self.yolo_config.net.getUnconnectedOutLayers()]
+        layer_names = self.net.getLayerNames()
+        output_layers = [layer_names[i[0] - 1] for i in self.net.getUnconnectedOutLayers()]
         return output_layers
 
     def draw_bounding_box(self, image, class_id, x, y, x_plus_w, y_plus_h):
@@ -65,8 +72,8 @@ class CameraAnalyzer:
             (self.yolo_config.batch_size, self.yolo_config.batch_size),
             (0, 0, 0), True, crop=False)
 
-        self.yolo_config.net.setInput(blob)
-        outs = self.yolo_config.net.forward(self.get_output_layers())
+        self.net.setInput(blob)
+        outs = self.net.forward(self.get_output_layers())
 
         class_ids = []
         confidences = []
@@ -123,7 +130,7 @@ class CameraAnalyzer:
 
     def skip_frames(self):
         for _ in range(self.frames_per_process - 1):
-            self.camera_config.capture.read_events()
+            self.capture.read()
 
     def update_frames_per_process(self, begin_time):
         process_time = 1.25 * (time.time() - begin_time) / self.frames_per_process
@@ -138,7 +145,7 @@ class CameraAnalyzer:
 
     def one_process_episode(self, repository, show):
         self.skip_frames()
-        ret, frame = self.camera_config.capture().read_events()
+        ret, frame = self.capture.read()
         if ret:
             begin_time = time.time()
             boxes, class_ids, confidences = self.process_frame(frame, repository)
@@ -162,5 +169,5 @@ class CameraAnalyzer:
         if CONSOLE_INFO == 1:
             print("Begin video processing...")
 
-        while True:
+        while self.on:
             self.one_process_episode(repository, show)

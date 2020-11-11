@@ -8,18 +8,18 @@ class CamerasRepository:
         self.conn = sqlite3.connect(data_base, check_same_thread=False)
         self.c = self.conn.cursor()
         self.c.execute('''CREATE TABLE IF NOT EXISTS cameras
-                                     (id INTEGER, name varchar(50), ip varchar(50), username varchar(50), password varchar(50), fps integer,  PRIMARY KEY(id))''')
+                                     (name varchar(50), ip varchar(50), username varchar(50), password varchar(50), fps integer,  PRIMARY KEY(name))''')
         self.conn.commit()
 
     def insert_camera(self, name, ip, username, password, fps):
         self.c = self.conn.cursor()
         self.c.execute("INSERT INTO cameras(name, ip, username, password, fps) VALUES (?,?,?,?,?)",
-                           [name, ip, username, password, fps])
+                       [name, ip, username, password, fps])
         self.conn.commit()
 
-    def read_camera(self, id):
+    def read_camera(self, name):
         cur = self.conn.cursor()
-        query = "select * from cameras where id = " + str(id)
+        query = "select * from cameras where cameras.name = '%s'" % name
         cur.execute(query)
 
         return cur.fetchone()
@@ -36,7 +36,7 @@ class AreasRepository:
         self.c = self.conn.cursor()
         self.c.execute('''CREATE TABLE IF NOT EXISTS areas
                              (name varchar(1), confidence_required varchar(50),
-                             x integer, y integer, w integer, h integer, camera_id INTEGER, FOREIGN KEY(camera_id) REFERENCES camera(id))''')
+                             x integer, y integer, w integer, h integer, camera_id INTEGER, FOREIGN KEY(camera_id) REFERENCES camera(name))''')
         self.conn.commit()
 
     def insert_area(self, name, confidence_required, x, y, w, h):
@@ -72,7 +72,7 @@ class EventsRepository:
         cur = self.conn.cursor()
         query = "select * from events"
         if date_from is not None:
-            query += " where date > " + date_from
+            query += " where date > %s" % date_from
         cur.execute(query)
         values = cur.fetchall()
         return values

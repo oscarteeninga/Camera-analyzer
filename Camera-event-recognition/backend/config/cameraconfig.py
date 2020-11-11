@@ -6,15 +6,14 @@ class CameraConfig:
 
     @classmethod
     def from_list(cls, l, api=False):
-        return CameraConfig(l[1], l[2], l[3], l[4], l[5], api=api)
+        print(l)
+        return CameraConfig(l[0], l[1], l[2], l[3], l[4], api=api)
 
     def __init__(self, name, ip, username, password, fps=None, api=False):
         self.name = name
         self.ip = ip
         self.username = username
         self.password = password
-        if not api:
-            self.capture = cv2.VideoCapture('rtsp://' + self.username + ':' + self.password + '@' + self.ip + ':554')
         if fps:
             self.fps = fps
         else:
@@ -31,8 +30,12 @@ class CameraConfig:
             'password': self.password
         }
 
+    def capture(self):
+        return cv2.VideoCapture('rtsp://' + self.username + ':' + self.password + '@' + self.ip + ':554')
+
     def check_fps(self):
+        c = self.capture()
         b = time.time()
         for _ in range(150):
-            self.capture.read()
+            c.read()
         return int(150 / (time.time() - b))
