@@ -1,8 +1,6 @@
-import json
-
-from services.cameraservice import CameraService
 from model.receiver import DetectBox
 from repositories.repositories import AreasRepository, DATABASE
+from services.cameraservice import CameraService
 
 camera_service = CameraService()
 
@@ -23,7 +21,7 @@ class AreaService:
             detect_box = DetectBox(area[2], area[3], area[4], area[5])
             if float(area[1]) <= detect_box.coverage(x, y, width, height):
                 return area[0]
-        return ""
+        return None
 
     def parse_areas(self, areas):
         jsons = []
@@ -38,4 +36,4 @@ class AreaService:
                 "camera": camera_service.get_camera_name(area[6], api=True)
             }
             jsons.append(dic)
-        return json.dumps(jsons)
+        return jsons

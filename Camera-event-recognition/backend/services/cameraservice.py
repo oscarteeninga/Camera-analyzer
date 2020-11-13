@@ -6,8 +6,8 @@ class CameraService:
     def __init__(self):
         self.repository = CamerasRepository(DATABASE)
 
-    def get_camera_name(self, name, api=False):
-        return CameraConfig.from_list(self.repository.read_camera(name), api=api).name
+    def get_camera_name(self, id, api=False):
+        return self.repository.read_camera(id)[1]
 
     def add_config(self, config: CameraConfig):
         self.repository.insert_camera(config.name, config.ip, config.username, config.password, config.fps)

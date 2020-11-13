@@ -1,15 +1,25 @@
 import sqlite3
 import time
 
-DATABASE = "db"
+DATABASE = "data.db"
+
+
+def init_tables(cursor):
+    cursor.execute('''CREATE TABLE IF NOT EXISTS cameras
+                                        (ID INTEGER PRIMARY KEY, name varchar(50), ip varchar(50), username varchar(50), password varchar(50), fps integer)''')
+    cursor.execute('''CREATE TABLE IF NOT EXISTS areas
+                             (name varchar(1), confidence_required varchar(50),
+                             x integer, y integer, w integer, h integer, camera_id BIGINT,FOREIGN KEY(camera_id) REFERENCES cameras(id))''')
+    cursor.execute('''CREATE TABLE IF NOT EXISTS events
+                        (date bigint, confidence varchar(50), object varchar(50), 
+                        x integer, y integer, w integer, h integer, camera_id BIGINT,  FOREIGN KEY(camera_id) REFERENCES cameras(id))''')
 
 
 class CamerasRepository:
     def __init__(self, data_base):
         self.conn = sqlite3.connect(data_base, check_same_thread=False)
         self.c = self.conn.cursor()
-        self.c.execute('''CREATE TABLE IF NOT EXISTS cameras
-                                     (name varchar(50), ip varchar(50), username varchar(50), password varchar(50), fps integer,  PRIMARY KEY(name))''')
+        init_tables(self.c)
         self.conn.commit()
 
     def insert_camera(self, name, ip, username, password, fps):
@@ -18,9 +28,9 @@ class CamerasRepository:
                        [name, ip, username, password, fps])
         self.conn.commit()
 
-    def read_camera(self, name):
+    def read_camera(self, id):
         cur = self.conn.cursor()
-        query = "select * from cameras where cameras.name = '%s'" % name
+        query = "select * from cameras where cameras.id= '%s'" % id
         cur.execute(query)
 
         return cur.fetchone()
@@ -35,15 +45,14 @@ class AreasRepository:
     def __init__(self, data_base):
         self.conn = sqlite3.connect(data_base, check_same_thread=False)
         self.c = self.conn.cursor()
-        self.c.execute('''CREATE TABLE IF NOT EXISTS areas
-                             (name varchar(1), confidence_required varchar(50),
-                             x integer, y integer, w integer, h integer, camera_id INTEGER, FOREIGN KEY(camera_id) REFERENCES camera(name))''')
+        init_tables(self.c)
         self.conn.commit()
 
     def insert_area(self, name, confidence_required, x, y, w, h):
         self.c = self.conn.cursor()
-        self.c.execute("INSERT INTO areas(name, confidence_required, x, y, w, h) VALUES (?,?,?,?,?,?)",
-                       [name, confidence_required, x, y, w, h])
+        self.c.execute(
+            "INSERT INTO areas(name, confidence_required, x, y, w, h) VALUES (?,?,?,?,?,?)",
+            [name, confidence_required, x, y, w, h])
         self.conn.commit()
 
     def read_areas(self):
@@ -57,9 +66,7 @@ class EventsRepository:
     def __init__(self, data_base):
         self.conn = sqlite3.connect(data_base, check_same_thread=False)
         self.c = self.conn.cursor()
-        self.c.execute('''CREATE TABLE IF NOT EXISTS events
-                     (date bigint, confidence varchar(50), object varchar(50), 
-                     x integer, y integer, w integer, h integer, camera_id INTEGER,  FOREIGN KEY(camera_id) REFERENCES camera(id))''')
+        init_tables(self.c)
         self.conn.commit()
 
     def insert_event(self, objectname, confidence, x, y, w, h, camera_id):

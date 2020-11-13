@@ -1,5 +1,3 @@
-import json
-
 from repositories.repositories import EventsRepository, DATABASE
 from services.areaservice import AreaService
 from services.cameraservice import CameraService
@@ -29,4 +27,4 @@ class EventService:
                 "area": area_service.recognize_area(event[3], event[4], event[5], event[6])
             }
             jsons.append(dic)
-        return json.dumps(jsons)
+        return jsons

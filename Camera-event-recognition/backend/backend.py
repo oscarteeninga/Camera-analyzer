@@ -21,7 +21,8 @@ camera_post = app.model('Camera configuration params', {
     'camera_name': fields.String(required=True, description='Name of the camera'),
     'camera_user': fields.String(required=True, description='Camera user'),
     'camera_password': fields.String(required=True, description='Password to camera'),
-    'camera_fps': fields.Integer(required=True, description='Frames per second that camera will run'),
+    'camera_fps': fields.Integer(required=True,
+                                 description='Frames per second that camera will run'),
 })
 
 
@@ -41,7 +42,9 @@ class Events(Resource):
             size = int(sizearg)
         else:
             size = None
-        return event_service.get_events(page, size, date_from)
+        events = event_service.get_events(page, size, date_from)
+        print("Returned + " + str(len(events)) + " events")
+        return events
 
 
 @app.route('/devices')
@@ -84,6 +87,23 @@ class StartAll(Resource):
             thread = threading.Thread(target=camera_analyzer.video, args=(True, True,))
             thread.start()
             receivers[conf.name] = camera_analyzer
+
+
+@app.route('/on')
+class StopCamera(Resource):
+    def post(self):
+        """Stop all cameras"""
+        for conf in camera_service.get_configs():
+            if conf is None:
+                return "Receiver not found", 404
+            elif conf in receivers.keys():
+                return "Analyzer already started"
+            else:
+                camera_analyzer = CameraAnalyzer(conf)
+                thread = threading.Thread(target=camera_analyzer.video, args=(True, True,))
+                thread.start()
+                receivers[conf] = camera_analyzer
+                return "Analyzer " + conf.name + " started!"
 
 
 @app.route('/on/<camera_id>')
