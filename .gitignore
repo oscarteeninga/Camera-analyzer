@@ -1,6 +1,5 @@
-yolo.weights
 .DS_Store
-hehehe
+
 /Camera-event-recognition/bin/
 .idea/
 # Ignore Gradle project-specific cache directory
@@ -8,3 +7,6 @@ hehehe
 
 # Ignore Gradle build output directory
 build
+
+# Ignore yolo CNN-weights files
+*.weights

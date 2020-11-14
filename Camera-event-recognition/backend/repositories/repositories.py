@@ -6,7 +6,7 @@ DATABASE = "data.db"
 
 def init_tables(cursor):
     cursor.execute('''CREATE TABLE IF NOT EXISTS cameras
-                                        (ID INTEGER PRIMARY KEY, name varchar(50), ip varchar(50), username varchar(50), password varchar(50), fps integer)''')
+                                        (ID INTEGER PRIMARY KEY, name varchar(50), ip varchar(50), username varchar(50), password varchar(50))''')
     cursor.execute('''CREATE TABLE IF NOT EXISTS areas
                              (name varchar(1), confidence_required varchar(50),
                              x integer, y integer, w integer, h integer, camera_id BIGINT,FOREIGN KEY(camera_id) REFERENCES cameras(id))''')
@@ -22,10 +22,10 @@ class CamerasRepository:
         init_tables(self.c)
         self.conn.commit()
 
-    def insert_camera(self, name, ip, username, password, fps):
+    def insert_camera(self, name, ip, username, password):
         self.c = self.conn.cursor()
-        self.c.execute("INSERT INTO cameras(name, ip, username, password, fps) VALUES (?,?,?,?,?)",
-                       [name, ip, username, password, fps])
+        self.c.execute("INSERT INTO cameras(name, ip, username, password) VALUES (?,?,?,?)",
+                       [name, ip, username, password])
         self.conn.commit()
 
     def read_camera(self, id):
@@ -60,6 +60,13 @@ class AreasRepository:
         cur.execute("select * from areas")
         values = cur.fetchall()
         return values
+
+    def read_area(self, camera):
+        cur = self.conn.cursor()
+        query = "select * from areas where camera_id = '%s'" % id
+        cur.execute(query)
+
+        return cur.fetchone()
 
 
 class EventsRepository:

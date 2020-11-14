@@ -4,7 +4,7 @@ import time
 from config.cameraconfig import CameraConfig
 from flask import Flask, request, jsonify
 from flask_restplus import Api, fields, Resource
-from model.receiver import CameraAnalyzer
+from model.analyzer import CameraAnalyzer
 from services.areaservice import AreaService
 from services.cameraservice import CameraService
 from services.eventservice import EventService
@@ -92,7 +92,7 @@ class StartAll(Resource):
         """Start all cameras registered in the system"""
         for conf in camera_service.get_configs():
             camera_analyzer = CameraAnalyzer(conf)
-            thread = threading.Thread(target=camera_analyzer.video, args=(True, False,))
+            thread = threading.Thread(target=camera_analyzer.video, args=(True,))
             thread.start()
             receivers[conf.name] = camera_analyzer
 
@@ -110,7 +110,7 @@ class startSingleCamera(Resource):
             return "Analyzer already started"
         else:
             camera_analyzer = CameraAnalyzer(conf)
-            thread = threading.Thread(target=camera_analyzer.video, args=(True, False,))
+            thread = threading.Thread(target=camera_analyzer.video, args=(True,))
             thread.start()
             receivers[conf] = camera_analyzer
             return "Analyzer " + camera_id + " started!"
@@ -150,8 +150,7 @@ class CameraConfiguration(Resource):
         ip = request.json['camera_ip']
         username = request.json['camera_user']
         password = request.json['camera_password']
-        fps = int(request.json['camera_fps'])
-        camera_service.add_config(CameraConfig(name, ip, username, password, fps))
+        camera_service.add_config(CameraConfig(name, ip, username, password))
 
     @app.doc(params={'id': 'Id of camera which the configuration is returned'})
     def get(self):
