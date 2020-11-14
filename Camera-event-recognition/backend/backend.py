@@ -86,32 +86,16 @@ class State(Resource):
             return jsonify("off")
 
 
-@app.route("/start")
+@app.route("/on")
 class StartAll(Resource):
     def post(self):
         """Start all cameras registered in the system"""
         for conf in camera_service.get_configs():
             camera_analyzer = CameraAnalyzer(conf)
-            thread = threading.Thread(target=camera_analyzer.video, args=(True, True,))
+            thread = threading.Thread(target=camera_analyzer.video, args=(True, False,))
             thread.start()
             receivers[conf.name] = camera_analyzer
 
-
-@app.route('/on')
-class StopCamera(Resource):
-    def post(self):
-        """Stop all cameras"""
-        for conf in camera_service.get_configs():
-            if conf is None:
-                return "Receiver not found", 404
-            elif conf in receivers.keys():
-                return "Analyzer already started"
-            else:
-                camera_analyzer = CameraAnalyzer(conf)
-                thread = threading.Thread(target=camera_analyzer.video, args=(True, True,))
-                thread.start()
-                receivers[conf] = camera_analyzer
-                return "Analyzer " + conf.name + " started!"
 
 
 @app.route('/on/<camera_id>')
@@ -126,7 +110,7 @@ class startSingleCamera(Resource):
             return "Analyzer already started"
         else:
             camera_analyzer = CameraAnalyzer(conf)
-            thread = threading.Thread(target=camera_analyzer.video, args=(True, True,))
+            thread = threading.Thread(target=camera_analyzer.video, args=(True, False,))
             thread.start()
             receivers[conf] = camera_analyzer
             return "Analyzer " + camera_id + " started!"
