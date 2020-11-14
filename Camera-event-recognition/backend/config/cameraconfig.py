@@ -15,7 +15,7 @@ class CameraConfig:
         self.ip = ip
         self.username = username
         self.password = password
-        if fps:
+        if fps and fps > 0:
             self.fps = fps
         else:
             self.fps = self.check_fps()
