@@ -1,4 +1,5 @@
 import time
+
 import cv2
 
 
@@ -7,7 +8,7 @@ class CameraConfig:
     @classmethod
     def from_list(cls, l, api=False):
         print(l)
-        return CameraConfig(l[0], l[1], l[2], l[3], l[4], api=api)
+        return CameraConfig(l[1], l[2], l[3], l[4], l[5], api=api)
 
     def __init__(self, name, ip, username, password, fps=None, api=False):
         self.name = name
