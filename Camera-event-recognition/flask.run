@@ -1,0 +1,2 @@
+export FLASK_APP=backend/backend.py
+python3 -m flask run
