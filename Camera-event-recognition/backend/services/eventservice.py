@@ -9,7 +9,6 @@ camera_service = CameraService()
 class EventService:
     def __init__(self):
         self.repository = EventsRepository(DATABASE)
-        self.repository.insert_event('car', 0.4, 0, 0, 100, 100, None)
 
     def get_events(self, page, size, date_from):
         database_events = self.repository.read_events(page, size, date_from)
@@ -19,12 +18,13 @@ class EventService:
         jsons = []
         for event in events:
             dic = {
-                "type": event[2],
-                "confidence": event[1],
-                "camera": camera_service.get_camera_name(event[7]) if event[
-                                                                          7] is not None else None,
-                "timestamp": event[0],
-                "area": area_service.recognize_area(event[3], event[4], event[5], event[6])
+                "id": event[0],
+                "type": event[3],
+                "confidence": event[2],
+                "camera": camera_service.get_camera_name(event[8]) if event[
+                                                                          8] is not None else None,
+                "timestamp": event[1],
+                "area": area_service.recognize_area(event[4], event[5], event[6], event[7])
             }
             jsons.append(dic)
         return jsons

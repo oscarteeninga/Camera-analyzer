@@ -1,4 +1,5 @@
 import threading
+import time
 
 from config.cameraconfig import CameraConfig
 from flask import Flask, request, jsonify
@@ -24,6 +25,13 @@ camera_post = app.model('Camera configuration params', {
     'camera_fps': fields.Integer(required=True,
                                  description='Frames per second that camera will run'),
 })
+
+
+@app.route("/timestamp")
+class Events(Resource):
+    @app.doc(params={'date_from': 'Oldest date from which events are downloaded'})
+    def get(self):
+        return str(time.time() * 1000)
 
 
 @app.route("/events")

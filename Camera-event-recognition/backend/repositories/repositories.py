@@ -11,7 +11,7 @@ def init_tables(cursor):
                              (name varchar(1), confidence_required varchar(50),
                              x integer, y integer, w integer, h integer, camera_id BIGINT,FOREIGN KEY(camera_id) REFERENCES cameras(id))''')
     cursor.execute('''CREATE TABLE IF NOT EXISTS events
-                        (date bigint, confidence varchar(50), object varchar(50), 
+                        (id INTEGER PRIMARY KEY,date bigint, confidence varchar(50), object varchar(50), 
                         x integer, y integer, w integer, h integer, camera_id BIGINT,  FOREIGN KEY(camera_id) REFERENCES cameras(id))''')
 
 
@@ -70,13 +70,13 @@ class EventsRepository:
         self.conn.commit()
 
     def insert_event(self, objectname, confidence, x, y, w, h, camera_id):
-        print("Saving event: " + objectname + " with confidence: " + str(confidence))
         self.c = self.conn.cursor()
-        timestamp = time.time() * 1000
+        timestamp = int(time.time() * 1000)
         self.c.execute(
             "INSERT INTO events(date,object,confidence, x, y, w, h,camera_id) VALUES (?,?,?,?,?,?,?,?)",
             [timestamp, objectname, confidence, x, y, w, h, camera_id])
         self.conn.commit()
+        return str(timestamp)
 
     def read_events(self, page=None, size=None, date_from=None):
         cur = self.conn.cursor()
@@ -86,7 +86,7 @@ class EventsRepository:
             page = 0
         query = "select * from events"
         if date_from is not None:
-            query += " where date > %s" % date_from
+            query += " where `date` > %s" % date_from
         limitq = " limit %d,%d" % ((page * size), size)
         query += limitq
         cur.execute(query)
