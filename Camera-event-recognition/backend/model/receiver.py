@@ -2,8 +2,8 @@ import time
 
 import cv2
 import numpy as np
-from config.yoloconfig import YoloConfig
-from config.cameraconfig import CameraConfig
+from backend.config.yoloconfig import YoloConfig
+from backend.config.cameraconfig import CameraConfig
 
 CONSOLE_INFO = 1
 
