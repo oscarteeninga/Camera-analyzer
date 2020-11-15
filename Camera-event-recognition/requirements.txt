@@ -1,4 +1,5 @@
 flask_restplus==0.13.0
+flask-caching==1.9.0
 Flask==1.1.2
 numpy==1.19.2
 opencv_python==4.4.0.44

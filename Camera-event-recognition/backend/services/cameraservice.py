@@ -3,8 +3,6 @@ from repositories.repositories import CamerasRepository, DATABASE
 from services.cacheservice import cache, Dictionaries
 
 
-
-
 class CameraService:
     def __init__(self):
         self.repository = CamerasRepository(DATABASE)
@@ -32,5 +30,12 @@ class CameraService:
     def get_ips(self):
         return [config.ip for config in self.get_configs()]
 
-    def get_names(self):
-        return [config.name for config in self.get_configs()]
+    def get_cameras(self):
+        jsons = []
+        for camera in self.repository.read_cameras():
+            dic = {
+                "id": camera[0],
+                "name": camera[1]
+            }
+            jsons.append(dic)
+        return jsons

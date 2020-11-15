@@ -74,7 +74,7 @@ class Events(Resource):
         else:
             size = None
         events = event_service.get_events(page, size, date_from)
-        print("Returned + " + str(len(events)) + " events")
+        print("Returned " + str(len(events)) + " events")
         return events
 
 
@@ -82,7 +82,9 @@ class Events(Resource):
 class Devices(Resource):
     def get(self):
         """Returns list of devices"""
-        return jsonify(list(camera_service.get_names()))
+        response = jsonify(camera_service.get_cameras())
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
 
 
 @app.route('/state')
