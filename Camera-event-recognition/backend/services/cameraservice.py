@@ -35,7 +35,8 @@ class CameraService:
         for camera in self.repository.read_cameras():
             dic = {
                 "id": camera[0],
-                "name": camera[1]
+                "name": camera[1],
+                "ip":camera[2]
             }
             jsons.append(dic)
         return jsons

@@ -1,9 +1,9 @@
 import React from "react";
 
-const DeviceListItem = ({id, name}) => {
+const DeviceListItem = ({id, name, ip}) => {
     return (
         <div className="deviceListItem">
-            <h4 className="name">{name}</h4>
+            <h4 className="camera">{name} ({ip})</h4>
         </div>
     );
 };

@@ -45,8 +45,8 @@ class DeviceList extends Component {
                     <div>{this.state.error}</div>
                 ) : (
                     this.state.devices.length > 0 && this.state.devices.map((
-                        ({id, name}) => (
-                            <DeviceListItem id={id} name={name} key={id}/>
+                        ({id, name, ip}) => (
+                            <DeviceListItem id={id} name={name} ip={ip} key={id}/>
                         )
                     ))
                 )}
