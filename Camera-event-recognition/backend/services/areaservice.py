@@ -1,5 +1,6 @@
-from model.receiver import DetectBox
+from config.areaconfig import AreaConfig
 from repositories.repositories import AreasRepository, DATABASE
+from services.cacheservice import cache, Dictionaries
 from services.cameraservice import CameraService
 
 camera_service = CameraService()
@@ -11,19 +12,23 @@ class AreaService:
 
     def get_areas(self):
         database_areas = self.repository.read_areas()
-        # self.repository.insert_into_areas("a", 0.7, 10, 10, 10, 10)
-        # self.repository.insert_into_areas("b", 0.5, 30, 30, 10, 10)
         return self.parse_areas(database_areas)
 
     def recognize_area(self, x, y, width, height):
-        areas = self.repository.read_areas()
+        areas = cache.get(Dictionaries.AREAS)
         for area in areas:
-            detect_box = DetectBox(area[2], area[3], area[4], area[5])
-            if float(area[1]) <= detect_box.coverage(x, y, width, height):
-                return area[0]
+            detect_box = AreaConfig(area.get('name'), float(area.get('x')), float(area.get('y')), float(area.get('width')), float(area.get('height')))
+            if float(area.get('confidence_required')) <= detect_box.coverage(x, y, width, height):
+                return area.get('name')
         return None
 
-    def parse_areas(self, areas):
+    def add_area(self, name, confidence_required, x, y, w, h, camera_name):
+        camera_id = cache.get(Dictionaries.CAMERA_NAME_TO_IP).get(camera_name)
+        self.repository.insert_area(name, confidence_required, x, y, w, h, camera_id)
+        cache.set(Dictionaries.AREAS, self.get_areas())
+
+    @staticmethod
+    def parse_areas(areas):
         jsons = []
         for area in areas:
             dic = {
@@ -33,7 +38,7 @@ class AreaService:
                 "y": area[3],
                 "width": area[4],
                 "height": area[5],
-                "camera": camera_service.get_camera_name(area[6], api=True)
+                "camera": cache.get(Dictionaries.CAMERA_IP_TO_NAME).get(area[6])
             }
             jsons.append(dic)
         return jsons

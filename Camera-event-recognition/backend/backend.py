@@ -1,21 +1,30 @@
 import threading
 import time
 
-from config.cameraconfig import CameraConfig
 from flask import Flask, request, jsonify
 from flask_restplus import Api, fields, Resource
-from model.receiver import CameraAnalyzer
+
+from config.cameraconfig import CameraConfig
+from model.analyzer import CameraAnalyzer
 from services.areaservice import AreaService
+from services.cacheservice import cache, Dictionaries
 from services.cameraservice import CameraService
 from services.eventservice import EventService
 
 receivers = {}
-
-flask_app = Flask(__name__)
-app = Api(app=flask_app, title="Camera Api", default="Camera Api", default_label="Camera Api")
 event_service = EventService()
 area_service = AreaService()
 camera_service = CameraService()
+
+flask_app = Flask(__name__)
+app = Api(app=flask_app, title="Camera Api", default="Camera Api", default_label="Camera Api")
+
+cache.init_app(flask_app)
+ip_to_name, name_to_ip = camera_service.get_camera_name_id_mapping()
+cache.add(Dictionaries.CAMERA_IP_TO_NAME, ip_to_name)
+cache.add(Dictionaries.CAMERA_NAME_TO_IP, name_to_ip)
+cache.add(Dictionaries.AREAS, area_service.get_areas())
+
 configuration_name_space = app.namespace('Configuration', description='Cameras configuration')
 camera_post = app.model('Camera configuration params', {
     'camera_ip': fields.String(required=True, description='Camera ip address'),
@@ -24,6 +33,18 @@ camera_post = app.model('Camera configuration params', {
     'camera_password': fields.String(required=True, description='Password to camera'),
     'camera_fps': fields.Integer(required=True,
                                  description='Frames per second that camera will run'),
+})
+
+area_post = app.model('Area configuration params', {
+    'area_name': fields.String(required=True, description='Name of area'),
+    'area_confidence_required': fields.Float(required=True,
+                                             description='surface of object needed to be assign to area?'),
+    'area_x': fields.Float(required=True, description='X cord of start of area'),
+    'area_y': fields.Float(required=True, description='Y cord of start of area'),
+    'area_width': fields.Float(required=True,
+                               description='The width of area'),
+    'area_height': fields.Float(required=True, description='The height of area'),
+    'camera_name': fields.String(required=True, description='Name of camera which we want add area to')
 })
 
 
@@ -37,6 +58,8 @@ class Events(Resource):
 @app.route("/events")
 class Events(Resource):
     @app.doc(params={'date_from': 'Oldest date from which events are downloaded'})
+    @app.doc(params={'page': 'Oldest date from which events are downloaded'})
+    @app.doc(params={'size': 'Oldest date from which events are downloaded'})
     def get(self):
         """Return list of events at a given time"""
         date_from = request.args.get("date_from")
@@ -77,7 +100,7 @@ class State(Resource):
     @app.doc(params={'camera_id': 'Id of camera which state will be returned'})
     def get(self, camera_name):
         """Get state of camera with given id"""
-        conf = camera_service.get_config(camera_name, api=True)
+        conf = camera_service.get_config(camera_name)
         if conf is None:
             return "Camera does not exists", 404
         elif conf in receivers.keys():
@@ -92,10 +115,9 @@ class StartAll(Resource):
         """Start all cameras registered in the system"""
         for conf in camera_service.get_configs():
             camera_analyzer = CameraAnalyzer(conf)
-            thread = threading.Thread(target=camera_analyzer.video, args=(True, False,))
+            thread = threading.Thread(target=camera_analyzer.video, args=(True,))
             thread.start()
             receivers[conf.name] = camera_analyzer
-
 
 
 @app.route('/on/<camera_id>')
@@ -110,7 +132,7 @@ class startSingleCamera(Resource):
             return "Analyzer already started"
         else:
             camera_analyzer = CameraAnalyzer(conf)
-            thread = threading.Thread(target=camera_analyzer.video, args=(True, False,))
+            thread = threading.Thread(target=camera_analyzer.video, args=(True,))
             thread.start()
             receivers[conf] = camera_analyzer
             return "Analyzer " + camera_id + " started!"
@@ -150,15 +172,14 @@ class CameraConfiguration(Resource):
         ip = request.json['camera_ip']
         username = request.json['camera_user']
         password = request.json['camera_password']
-        fps = int(request.json['camera_fps'])
-        camera_service.add_config(CameraConfig(name, ip, username, password, fps))
+        camera_service.add_config(CameraConfig(name, ip, username, password))
 
-    @app.doc(params={'id': 'Id of camera which the configuration is returned'})
+    @app.doc(params={'name': 'Name of camera'})
     def get(self):
         """Get configuration of camera"""
         name = request.args.get("name")
         if name:
-            return camera_service.get_config(name, api=True).serialize()
+            return camera_service.get_config(name).serialize()
         else:
             return "No name given"
 
@@ -174,4 +195,16 @@ class CameraConfigurations(Resource):
 class Area(Resource):
     def get(self):
         """Get all area"""
-        return jsonify(area_service.get_areas())
+        return jsonify(cache.get(Dictionaries.AREAS))
+
+    @app.expect(area_post)
+    def post(self):
+        """Add new area"""
+        name = request.json['area_name']
+        confidence_required = request.json['area_confidence_required']
+        x = request.json['area_x']
+        y = request.json['area_y']
+        w = request.json['area_width']
+        h = request.json['area_height']
+        camera_name = request.json['camera_name']
+        area_service.add_area(name, confidence_required, x, y, w, h, camera_name)
