@@ -21,6 +21,12 @@ class CameraService:
         cache.set(Dictionaries.CAMERA_IP_TO_NAME, ip_to_name)
         cache.set(Dictionaries.CAMERA_NAME_TO_IP, name_to_ip)
 
+    def update_config(self, id, name, ip, username, password):
+        self.repository.update_camera(id, name, ip, username, password)
+        ip_to_name, name_to_ip = self.get_camera_name_id_mapping()
+        cache.set(Dictionaries.CAMERA_IP_TO_NAME, ip_to_name)
+        cache.set(Dictionaries.CAMERA_NAME_TO_IP, name_to_ip)
+
     def get_config(self, name):
         return CameraConfig.from_list(self.repository.read_camera(name))
 
