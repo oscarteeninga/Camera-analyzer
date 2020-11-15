@@ -48,11 +48,11 @@ class AreasRepository:
         init_tables(self.c)
         self.conn.commit()
 
-    def insert_area(self, name, confidence_required, x, y, w, h):
+    def insert_area(self, name, confidence_required, x, y, w, h, camera_id):
         self.c = self.conn.cursor()
         self.c.execute(
-            "INSERT INTO areas(name, confidence_required, x, y, w, h) VALUES (?,?,?,?,?,?)",
-            [name, confidence_required, x, y, w, h])
+            "INSERT INTO areas(name, confidence_required, x, y, w, h, camera_id) VALUES (?,?,?,?,?,?,?)",
+            [name, confidence_required, x, y, w, h, camera_id])
         self.conn.commit()
 
     def read_areas(self):
@@ -60,14 +60,6 @@ class AreasRepository:
         cur.execute("select * from areas")
         values = cur.fetchall()
         return values
-
-    def read_area(self, camera):
-        cur = self.conn.cursor()
-        query = "select * from areas where camera_id = '%s'" % id
-        cur.execute(query)
-
-        return cur.fetchone()
-
 
 class EventsRepository:
     def __init__(self, data_base):

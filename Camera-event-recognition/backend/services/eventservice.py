@@ -1,5 +1,6 @@
 from repositories.repositories import EventsRepository, DATABASE
 from services.areaservice import AreaService
+from services.cacheservice import cache, Dictionaries
 from services.cameraservice import CameraService
 
 area_service = AreaService()
@@ -21,7 +22,7 @@ class EventService:
                 "id": event[0],
                 "type": event[3],
                 "confidence": event[2],
-                "camera": camera_service.get_camera_name(event[8]) if event[
+                "camera": cache.get(Dictionaries.CAMERA_IP_TO_NAME).get(event[8]) if event[
                                                                           8] is not None else None,
                 "timestamp": event[1],
                 "area": area_service.recognize_area(event[4], event[5], event[6], event[7])

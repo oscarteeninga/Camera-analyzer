@@ -1,5 +1,6 @@
 from config.areaconfig import AreaConfig
 from repositories.repositories import AreasRepository, DATABASE
+from services.cacheservice import cache, Dictionaries
 from services.cameraservice import CameraService
 
 camera_service = CameraService()
@@ -13,16 +14,18 @@ class AreaService:
         database_areas = self.repository.read_areas()
         return self.parse_areas(database_areas)
 
-    def get_area(self, camera):
-        return self.repository.read_area(camera)
-
     def recognize_area(self, x, y, width, height):
-        areas = self.repository.read_areas()
+        areas = cache.get(Dictionaries.AREAS)
         for area in areas:
-            detect_box = AreaConfig.from_list(area)
-            if float(area[1]) <= detect_box.coverage(x, y, width, height):
-                return area[0]
+            detect_box = AreaConfig(area.get('name'), float(area.get('x')), float(area.get('y')), float(area.get('width')), float(area.get('height')))
+            if float(area.get('confidence_required')) <= detect_box.coverage(x, y, width, height):
+                return area.get('name')
         return None
+
+    def add_area(self, name, confidence_required, x, y, w, h, camera_name):
+        camera_id = cache.get(Dictionaries.CAMERA_NAME_TO_IP).get(camera_name)
+        self.repository.insert_area(name, confidence_required, x, y, w, h, camera_id)
+        cache.set(Dictionaries.AREAS, self.get_areas())
 
     @staticmethod
     def parse_areas(areas):
@@ -35,7 +38,7 @@ class AreaService:
                 "y": area[3],
                 "width": area[4],
                 "height": area[5],
-                "camera": camera_service.get_camera_name(area[6])
+                "camera": cache.get(Dictionaries.CAMERA_IP_TO_NAME).get(area[6])
             }
             jsons.append(dic)
         return jsons
