@@ -1,15 +1,17 @@
 import React, {Component} from 'react';
 import ReactDOM from 'react-dom';
-import './assets/style.css'
 import Api from "./app/Api";
-import DeviceListItem from "./components/DeviceListItem";
+import {Row, Table} from "react-materialize";
+import 'materialize-css/dist/css/materialize.min.css'
+import EditCamera from "./components/EditCamera";
 
 
 class DeviceList extends Component {
     state = {
         devices: [],
         loading: true,
-        error: undefined
+        error: undefined,
+        model: {}
     };
 
     async componentDidMount() {
@@ -39,19 +41,59 @@ class DeviceList extends Component {
 
     render() {
         return (
-            <div className="container">
-                <div className="title">Camera Analyzer Configuration</div>
-                {!this.state.error && this.state.loading ? (<div>Pobieranie danych...</div>) : this.state.error ? (
-                    <div>{this.state.error}</div>
+            <div className="App">
+                <row>
+                    <a className="waves-effect waves-light btn modal-trigger"
+                       data-target="edit_camera"
+                       onClick={() => {
+                           this.setState({
+                               model: {"id": undefined}
+                           })
+                       }}
+                    >Add Camera</a>
+                </row>
+                <EditCamera model={this.state.model}/>
+                {!this.state.error && this.state.loading ? (<Row>Fetching data...</Row>) : this.state.error ? (
+                    <Row>{this.state.error}</Row>
                 ) : (
-                    this.state.devices.length > 0 && this.state.devices.map((
-                        ({id, name, ip}) => (
-                            <DeviceListItem id={id} name={name} ip={ip} key={id}/>
-                        )
-                    ))
-                )}
+                    <Table>
+                        <thead>
+                        <tr>
+                            <th data-field="name">
+                                Name
+                            </th>
+                            <th data-field="ip">
+                                Ip Address
+                            </th>
+                            <th>
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {(this.state.devices.length > 0 && this.state.devices.map((
+                            ({id, name, ip}) => (
+                                <tr>
+                                    <td>{name} </td>
+                                    <td>{ip} </td>
+                                    <td>
+                                        <a className="waves-effect waves-light btn modal-trigger"
+                                           data-target="edit_camera"
+                                           style={{float: 'right'}}
+                                           onClick={() => {
+                                               const device = this.state.devices.find(d => d.id === id);
+                                               this.setState({
+                                                   model: device
+                                               })
+                                           }}
+                                        >Edit</a>
+                                    </td>
+                                </tr>
+                            )
+                        )))}
+                        </tbody>
+                    </Table>)}
             </div>
-        );
+        )
     }
 }
 
