@@ -16,13 +16,21 @@ class CameraService:
         return id_to_name, name_to_id
 
     def add_config(self, config: CameraConfig):
-        self.repository.insert_camera(config.name, config.ip, config.username, config.password)
+        id = self.repository.insert_camera(config.name, config.ip, config.username, config.password)
         ip_to_name, name_to_ip = self.get_camera_name_id_mapping()
         cache.set(Dictionaries.CAMERA_IP_TO_NAME, ip_to_name)
         cache.set(Dictionaries.CAMERA_NAME_TO_IP, name_to_ip)
+        return id
 
     def update_config(self, id, name, ip, username, password):
         self.repository.update_camera(id, name, ip, username, password)
+        ip_to_name, name_to_ip = self.get_camera_name_id_mapping()
+        cache.set(Dictionaries.CAMERA_IP_TO_NAME, ip_to_name)
+        cache.set(Dictionaries.CAMERA_NAME_TO_IP, name_to_ip)
+        return id
+
+    def delete_config(self, id):
+        self.repository.delete_camera(id)
         ip_to_name, name_to_ip = self.get_camera_name_id_mapping()
         cache.set(Dictionaries.CAMERA_IP_TO_NAME, ip_to_name)
         cache.set(Dictionaries.CAMERA_NAME_TO_IP, name_to_ip)
@@ -36,13 +44,25 @@ class CameraService:
     def get_ips(self):
         return [config.ip for config in self.get_configs()]
 
+    def get_camera(self, id):
+        camera = self.repository.read_camera(id)
+        return {
+            "id": camera[0],
+            "name": camera[1],
+            "ip": camera[2],
+            "user": camera[3],
+            "password": camera[4]
+        }
+
     def get_cameras(self):
         jsons = []
         for camera in self.repository.read_cameras():
             dic = {
                 "id": camera[0],
                 "name": camera[1],
-                "ip":camera[2]
+                "ip": camera[2],
+                "user": camera[3],
+                "password": camera[4]
             }
             jsons.append(dic)
         return jsons

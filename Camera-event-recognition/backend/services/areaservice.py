@@ -17,13 +17,13 @@ class AreaService:
     def recognize_area(self, x, y, width, height):
         areas = cache.get(Dictionaries.AREAS)
         for area in areas:
-            detect_box = AreaConfig(area.get('name'), float(area.get('x')), float(area.get('y')), float(area.get('width')), float(area.get('height')))
+            detect_box = AreaConfig(area.get('name'), float(area.get('x')), float(area.get('y')),
+                                    float(area.get('width')), float(area.get('height')))
             if float(area.get('confidence_required')) <= detect_box.coverage(x, y, width, height):
                 return area.get('name')
         return None
 
-    def add_area(self, name, confidence_required, x, y, w, h, camera_name):
-        camera_id = cache.get(Dictionaries.CAMERA_NAME_TO_IP).get(camera_name)
+    def add_area(self, name, confidence_required, x, y, w, h, camera_id):
         self.repository.insert_area(name, confidence_required, x, y, w, h, camera_id)
         cache.set(Dictionaries.AREAS, self.get_areas())
 
@@ -38,7 +38,7 @@ class AreaService:
                 "y": area[3],
                 "width": area[4],
                 "height": area[5],
-                "camera": cache.get(Dictionaries.CAMERA_IP_TO_NAME).get(area[6])
+                "camera_id": area[6]
             }
             jsons.append(dic)
         return jsons

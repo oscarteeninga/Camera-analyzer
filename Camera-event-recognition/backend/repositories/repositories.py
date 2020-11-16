@@ -27,11 +27,18 @@ class CamerasRepository:
         self.c.execute("INSERT INTO cameras(name, ip, username, password) VALUES (?,?,?,?)",
                        [name, ip, username, password])
         self.conn.commit()
+        return self.c.lastrowid
 
     def update_camera(self, id, name, ip, username, password):
         self.c = self.conn.cursor()
         query = "UPDATE cameras SET name = '{0}' , ip = '{1}', username = '{2}', password = '{3}' WHERE id = '{4}'".format(
             name, ip, username, password, id)
+        self.c.execute(query)
+        self.conn.commit()
+
+    def delete_camera(self, id):
+        self.c = self.conn.cursor()
+        query = "DELETE FROM cameras WHERE ID ='{0}'".format(id)
         self.c.execute(query)
         self.conn.commit()
 

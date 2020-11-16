@@ -1,10 +1,10 @@
 import threading
 import time
 
-from flask import Flask, request, jsonify
-from flask_restplus import Api, fields, Resource
-
 from config.cameraconfig import CameraConfig
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+from flask_restplus import Api, fields, Resource
 from model.analyzer import CameraAnalyzer
 from services.areaservice import AreaService
 from services.cacheservice import cache, Dictionaries
@@ -17,6 +17,7 @@ area_service = AreaService()
 camera_service = CameraService()
 
 flask_app = Flask(__name__)
+CORS(flask_app)
 app = Api(app=flask_app, title="Camera Api", default="Camera Api", default_label="Camera Api")
 
 cache.init_app(flask_app)
@@ -27,22 +28,18 @@ cache.add(Dictionaries.AREAS, area_service.get_areas())
 
 configuration_name_space = app.namespace('Configuration', description='Cameras configuration')
 camera_post = app.model('Camera configuration params', {
-    'camera_ip': fields.String(required=True, description='Camera ip address'),
-    'camera_name': fields.String(required=True, description='Name of the camera'),
-    'camera_user': fields.String(required=True, description='Camera user'),
-    'camera_password': fields.String(required=True, description='Password to camera'),
-    'camera_fps': fields.Integer(required=True,
-                                 description='Frames per second that camera will run'),
+    'ip': fields.String(required=True, description='Camera ip address'),
+    'name': fields.String(required=True, description='Name of the camera'),
+    'user': fields.String(required=True, description='Camera user'),
+    'password': fields.String(required=True, description='Password to camera')
 })
 
 camera_update = app.model('Camera configuration params', {
-    'camera_ip': fields.String(required=True, description='Camera ip address'),
-    'camera_name': fields.String(required=True, description='Name of the camera'),
-    'camera_user': fields.String(required=True, description='Camera user'),
-    'camera_password': fields.String(required=True, description='Password to camera'),
-    'camera_fps': fields.Integer(required=True,
-                                 description='Frames per second that camera will run'),
-    'camera_id': fields.String(required=True, description='Camera id')
+    'ip': fields.String(required=True, description='Camera ip address'),
+    'name': fields.String(required=True, description='Name of the camera'),
+    'user': fields.String(required=True, description='Camera user'),
+    'password': fields.String(required=True, description='Password to camera'),
+    'id': fields.String(required=True, description='Camera id')
 })
 
 area_post = app.model('Area configuration params', {
@@ -54,7 +51,8 @@ area_post = app.model('Area configuration params', {
     'area_width': fields.Float(required=True,
                                description='The width of area'),
     'area_height': fields.Float(required=True, description='The height of area'),
-    'camera_name': fields.String(required=True, description='Name of camera which we want add area to')
+    'camera_id': fields.String(required=True,
+                               description='id of camera which we want add area to')
 })
 
 
@@ -95,6 +93,36 @@ class Devices(Resource):
         response = jsonify(camera_service.get_cameras())
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response
+
+    def post(self):
+        """Create configuration of camera"""
+        name = request.json['name']
+        ip = request.json['ip']
+        username = request.json['user']
+        password = request.json['password']
+        id = camera_service.add_config(CameraConfig(name, ip, username, password))
+        response = jsonify(camera_service.get_camera(id))
+        return response
+
+
+@app.route('/devices/<id>')
+class DevicesSingle(Resource):
+    def get(self, id):
+        """Returns list of devices"""
+        response = jsonify(camera_service.get_cameras())
+        return response
+
+    def put(self, id):
+        name = request.json['name']
+        ip = request.json['ip']
+        username = request.json['user']
+        password = request.json['password']
+        id = camera_service.update_config(id, name, ip, username, password)
+        response = jsonify(camera_service.get_camera(id))
+        return response
+
+    def delete(self, id):
+        camera_service.delete_config(id)
 
 
 @app.route('/state')
@@ -180,10 +208,10 @@ class CameraConfiguration(Resource):
     @app.expect(camera_post)
     def post(self):
         """Create configuration of camera"""
-        name = request.json['camera_name']
-        ip = request.json['camera_ip']
-        username = request.json['camera_user']
-        password = request.json['camera_password']
+        name = request.json['name']
+        ip = request.json['ip']
+        username = request.json['user']
+        password = request.json['password']
         camera_service.add_config(CameraConfig(name, ip, username, password))
 
     @app.doc(params={'name': 'Name of camera'})
@@ -196,12 +224,11 @@ class CameraConfiguration(Resource):
             return "No name given"
 
     @app.expect(camera_update)
-    def put(self):
-        id = request.json['camera_id']
-        name = request.json['camera_name']
-        ip = request.json['camera_ip']
-        username = request.json['camera_user']
-        password = request.json['camera_password']
+    def put(self, id):
+        name = request.json['name']
+        ip = request.json['ip']
+        username = request.json['user']
+        password = request.json['password']
         camera_service.update_config(id, name, ip, username, password)
 
 
@@ -227,5 +254,5 @@ class Area(Resource):
         y = request.json['area_y']
         w = request.json['area_width']
         h = request.json['area_height']
-        camera_name = request.json['camera_name']
-        area_service.add_area(name, confidence_required, x, y, w, h, camera_name)
+        camera_id = request.json['camera_id']
+        area_service.add_area(name, confidence_required, x, y, w, h, camera_id)
