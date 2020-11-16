@@ -2,6 +2,8 @@ import React, {Component} from "react";
 import M from "materialize-css";
 import "materialize-css/dist/css/materialize.min.css";
 import PropTypes from 'prop-types'
+import ApiService from "../app/Api";
+import {Button} from "react-materialize";
 
 class EditCamera extends Component {
     state = {
@@ -9,8 +11,7 @@ class EditCamera extends Component {
         name: "",
         ip: "",
         user: "",
-        password: "",
-        fps: ""
+        password: ""
     };
 
     componentDidMount() {
@@ -42,6 +43,41 @@ class EditCamera extends Component {
         // instance.destroy();
     }
 
+    postCamera() {
+        const callback = this.props.callback;
+        const url = this.state.id ? ApiService.getBaseUrl() + "/devices/" + this.state.id : ApiService.getBaseUrl() + '/devices';
+        fetch(url, { // optional fetch options
+            body: JSON.stringify({
+                name: this.state.name,
+                ip: this.state.ip,
+                user: this.state.user,
+                password: this.state.password
+            }),
+            method: this.state.id ? "PUT" : "POST",
+            headers: {
+                'content-type': 'application/json'
+            }
+        })
+            .then(function (response) {
+                if (response.status === 200) {
+                    callback()
+                }
+            })
+    }
+
+    deleteCamera() {
+        const callback = this.props.callback;
+        const url = ApiService.getBaseUrl() + "/devices/" + this.state.id;
+        fetch(url, { // optional fetch options
+            method: "DELETE"
+        })
+            .then(function (response) {
+                if (response.status === 200) {
+                    callback()
+                }
+            })
+    }
+
     render() {
         if (this.state.id !== this.props.model.id)
             this.setState({
@@ -62,7 +98,19 @@ class EditCamera extends Component {
                     className="modal"
                 >
                     <div className="modal-content">
-                        <h4>{this.state.id && this.state.id > 0 ? "Edit Camera" : "New Camera"}</h4>
+                        <div className="row">
+                            <h4 style={{
+                                display: 'inline-block',
+                                float: 'left'
+                            }}>{this.state.id && this.state.id > 0 ? "Edit Camera" : "New Camera"}</h4>
+                            {this.state.id && (
+                                <Button className="modal-close waves-effect waves-red"
+                                        style={{float: 'right', 'background-color': 'red'}}
+                                        onClick={() => {
+                                            this.deleteCamera()
+                                        }}>Delete</Button>
+                            )}
+                        </div>
                         <div className="row">
                             <div className="input-field col s6">
                                 <input placeholder="Outside House Camera" id="name" type="text" className="validate"
@@ -102,22 +150,14 @@ class EditCamera extends Component {
                                 <label htmlFor="password">Password</label>
                             </div>
                         </div>
-                        <div className="row">
-                            <div className="input-field col s6">
-                                <input placeholder="30" id="fps" type="text" className="validate" onChange={e => {
-                                    this.setState({
-                                        fps: e.target.value
-                                    })
-                                }} value={this.state.fps ? this.state.fps : ""}/>
-                                <label htmlFor="fps">FPS</label>
-                            </div>
-                        </div>
                     </div>
-                    <div class="modal-footer">
-                        <a href="#" class="modal-close waves-effect waves-red btn-flat">
+                    <div className="modal-footer">
+                        <a href="#" className="modal-close waves-effect waves-red btn-flat">
                             Cancel
                         </a>
-                        <a href="#" class="modal-close waves-effect waves-green btn-flat">
+                        <a href="#" className="modal-close waves-effect waves-green btn-flat" onClick={() => {
+                            this.postCamera()
+                        }}>
                             Save
                         </a>
                     </div>
@@ -128,7 +168,8 @@ class EditCamera extends Component {
 }
 
 EditCamera.propTypes = {
-    model: PropTypes.object.isRequired
+    model: PropTypes.object.isRequired,
+    callback: PropTypes.func.isRequired
 };
 
 export default EditCamera;

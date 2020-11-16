@@ -14,35 +14,44 @@ class DeviceList extends Component {
         model: {}
     };
 
-    async componentDidMount() {
-        const response = await fetch(Api.getBaseUrl() + '/devices')
+    componentDidMount() {
+        this.loadList()
+    }
+
+    loadList() {
+        fetch(Api.getBaseUrl() + '/devices')
+            .then(response => {
+                if (this.state.error === undefined) {
+                    if (response.status === 200) {
+                        response.json()
+                            .then(data => {
+                                this.setState({
+                                    devices: data,
+                                    loading: false,
+                                    error: undefined
+                                });
+                            });
+                    } else {
+                        this.setState({
+                            error: response.statusText,
+                            loading: false
+                        })
+                    }
+                }
+            })
             .catch(err => {
                 this.setState({
                     error: err.toString(),
                     loading: false
                 })
             });
-        if (this.state.error === undefined) {
-            if (response.status === 200) {
-                const data = await response.json();
-                this.setState({
-                    devices: data,
-                    loading: false,
-                    error: undefined
-                });
-            } else {
-                this.setState({
-                    error: response.statusText,
-                    loading: false
-                })
-            }
-        }
+
     }
 
     render() {
         return (
             <div className="App">
-                <row>
+                <div className="row">
                     <a className="waves-effect waves-light btn modal-trigger"
                        data-target="edit_camera"
                        onClick={() => {
@@ -51,8 +60,10 @@ class DeviceList extends Component {
                            })
                        }}
                     >Add Camera</a>
-                </row>
-                <EditCamera model={this.state.model}/>
+                </div>
+                <EditCamera model={this.state.model} callback={() => {
+                    this.loadList()
+                }}/>
                 {!this.state.error && this.state.loading ? (<Row>Fetching data...</Row>) : this.state.error ? (
                     <Row>{this.state.error}</Row>
                 ) : (
