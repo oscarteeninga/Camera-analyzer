@@ -62,7 +62,7 @@ class EditCamera extends Component {
                     className="modal"
                 >
                     <div className="modal-content">
-                        <h4>Edit Camera</h4>
+                        <h4>{this.state.id && this.state.id > 0 ? "Edit Camera" : "New Camera"}</h4>
                         <div className="row">
                             <div className="input-field col s6">
                                 <input placeholder="Outside House Camera" id="name" type="text" className="validate"
