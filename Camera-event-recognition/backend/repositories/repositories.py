@@ -28,6 +28,13 @@ class CamerasRepository:
                        [name, ip, username, password])
         self.conn.commit()
 
+    def update_camera(self, id, name, ip, username, password):
+        self.c = self.conn.cursor()
+        query = "UPDATE cameras SET name = '{0}' , ip = '{1}', username = '{2}', password = '{3}' WHERE id = '{4}'".format(
+            name, ip, username, password, id)
+        self.c.execute(query)
+        self.conn.commit()
+
     def read_camera(self, id):
         cur = self.conn.cursor()
         query = "select * from cameras where cameras.id= '%s'" % id
@@ -60,6 +67,7 @@ class AreasRepository:
         cur.execute("select * from areas")
         values = cur.fetchall()
         return values
+
 
 class EventsRepository:
     def __init__(self, data_base):

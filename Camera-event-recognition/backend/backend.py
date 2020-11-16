@@ -35,6 +35,16 @@ camera_post = app.model('Camera configuration params', {
                                  description='Frames per second that camera will run'),
 })
 
+camera_update = app.model('Camera configuration params', {
+    'camera_ip': fields.String(required=True, description='Camera ip address'),
+    'camera_name': fields.String(required=True, description='Name of the camera'),
+    'camera_user': fields.String(required=True, description='Camera user'),
+    'camera_password': fields.String(required=True, description='Password to camera'),
+    'camera_fps': fields.Integer(required=True,
+                                 description='Frames per second that camera will run'),
+    'camera_id': fields.String(required=True, description='Camera id')
+})
+
 area_post = app.model('Area configuration params', {
     'area_name': fields.String(required=True, description='Name of area'),
     'area_confidence_required': fields.Float(required=True,
@@ -184,6 +194,15 @@ class CameraConfiguration(Resource):
             return camera_service.get_config(name).serialize()
         else:
             return "No name given"
+
+    @app.expect(camera_update)
+    def put(self):
+        id = request.json['camera_id']
+        name = request.json['camera_name']
+        ip = request.json['camera_ip']
+        username = request.json['camera_user']
+        password = request.json['camera_password']
+        camera_service.update_config(id, name, ip, username, password)
 
 
 @configuration_name_space.route('/all')
