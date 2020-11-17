@@ -31,8 +31,7 @@ class CamerasRepository:
 
     def update_camera(self, id, name, ip, username, password):
         self.c = self.conn.cursor()
-        query = "UPDATE cameras SET name = '{0}' , ip = '{1}', username = '{2}', password = '{3}' WHERE id = '{4}'".format(
-            name, ip, username, password, id)
+        query = f"UPDATE cameras SET name = '{name}' , ip = '{ip}', username = '{username}', password = '{password}' WHERE id = '{id}'"
         self.c.execute(query)
         self.conn.commit()
 
@@ -69,12 +68,28 @@ class AreasRepository:
             [name, confidence_required, x, y, w, h, camera_id])
         self.conn.commit()
 
-    def read_areas(self):
+    def update_area(self, new_name, confidence_required, x, y, w, h, camera_id, name):
+        self.c = self.conn.cursor()
+        query = f"UPDATE areas SET name = '{new_name}', confidence_required = '{confidence_required}', x = '{x}', y = '{y}', w = '{w}', h = '{h}' WHERE camera_id = '{camera_id}' and name = '{name}'"
+        self.c.execute(query)
+        self.conn.commit()
+
+    def read_areas(self, id, name):
         cur = self.conn.cursor()
-        cur.execute("select * from areas")
+        query = 'select * from areas'
+        if id is not None:
+            query += " where camera_id = '{0}'".format(id)
+        if name is not None:
+            query += " and name = '{0}'".format(name)
+        cur.execute(query)
         values = cur.fetchall()
         return values
 
+    def delete_area(self, id, name):
+        self.c = self.conn.cursor()
+        query = f"DELETE FROM areas WHERE camera_id ='{id}' and name='{name}'"
+        self.c.execute(query)
+        self.conn.commit()
 
 class EventsRepository:
     def __init__(self, data_base):

@@ -42,7 +42,7 @@ camera_update = app.model('Camera configuration params', {
     'id': fields.String(required=True, description='Camera id')
 })
 
-area_post = app.model('Area configuration params', {
+area = app.model('Area configuration params', {
     'area_name': fields.String(required=True, description='Name of area'),
     'area_confidence_required': fields.Float(required=True,
                                              description='surface of object needed to be assign to area?'),
@@ -50,9 +50,7 @@ area_post = app.model('Area configuration params', {
     'area_y': fields.Float(required=True, description='Y cord of start of area'),
     'area_width': fields.Float(required=True,
                                description='The width of area'),
-    'area_height': fields.Float(required=True, description='The height of area'),
-    'camera_id': fields.String(required=True,
-                               description='id of camera which we want add area to')
+    'area_height': fields.Float(required=True, description='The height of area')
 })
 
 
@@ -125,6 +123,48 @@ class DevicesSingle(Resource):
         camera_service.delete_config(id)
 
 
+@app.route('/device/<id>/areas')
+class DeviceAreas(Resource):
+    def get(self, id):
+        """Return list of areas for device of given id"""
+        return area_service.get_areas(id=id)
+
+    @app.expect(area)
+    def post(self, id):
+        """Add new area to device of given id"""
+        name = request.json['area_name']
+        confidence_required = request.json['area_confidence_required']
+        x = request.json['area_x']
+        y = request.json['area_y']
+        w = request.json['area_width']
+        h = request.json['area_height']
+        area_service.add_area(name, confidence_required, x, y, w, h, id)
+        return {'success': True}, 200, {'ContentType': 'application/json'}
+
+
+@app.route('/device/<id>/area/<name>')
+class DeviceArea(Resource):
+    def get(self, id, name):
+        """Return list of areas for device of given id"""
+        return area_service.get_areas(id=id, name=name)
+
+    @app.expect(area)
+    def put(self, id, name):
+        """Add new area to device of given id"""
+        new_name = request.json['area_name']
+        confidence_required = request.json['area_confidence_required']
+        x = request.json['area_x']
+        y = request.json['area_y']
+        w = request.json['area_width']
+        h = request.json['area_height']
+        area_service.update_area(new_name, confidence_required, x, y, w, h, id, name)
+        return {'success': True}, 200, {'ContentType': 'application/json'}
+
+    def delete(self, id, name):
+        area_service.delete_area(id, name)
+        return {'success': True}, 200, {'ContentType': 'application/json'}
+
+
 @app.route('/state')
 class States(Resource):
     def get(self):
@@ -158,6 +198,7 @@ class StartAll(Resource):
             thread = threading.Thread(target=camera_analyzer.video, args=(True,))
             thread.start()
             receivers[conf.name] = camera_analyzer
+        return {'success': True}, 200, {'ContentType': 'application/json'}
 
 
 @app.route('/on/<camera_id>')
@@ -180,7 +221,7 @@ class startSingleCamera(Resource):
 
 @app.route('/off/<camera_name>')
 class stopSingleCamera(Resource):
-    @app.doc(params={'camera_id': 'Id of camera which will be stopped'})
+    @app.doc(params={'camera_name': 'Name of camera which will be stopped'})
     def post(self, camera_name):
         """Stop camera with given id"""
         conf = camera_service.get_config(camera_name)
@@ -244,15 +285,3 @@ class Area(Resource):
     def get(self):
         """Get all area"""
         return jsonify(cache.get(Dictionaries.AREAS))
-
-    @app.expect(area_post)
-    def post(self):
-        """Add new area"""
-        name = request.json['area_name']
-        confidence_required = request.json['area_confidence_required']
-        x = request.json['area_x']
-        y = request.json['area_y']
-        w = request.json['area_width']
-        h = request.json['area_height']
-        camera_id = request.json['camera_id']
-        area_service.add_area(name, confidence_required, x, y, w, h, camera_id)
