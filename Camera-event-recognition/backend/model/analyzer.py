@@ -7,21 +7,26 @@ from config.cameraconfig import CameraConfig
 from config.areaconfig import AreaConfig
 from model.receiver import Receiver
 
-CONSOLE_INFO = 1
+from services.areaservice import AreaService
+from services.eventservice import EventService
+
+CONSOLE_INFO = 0
 
 
-class CameraAnalyzer:
+class Analyzer:
 
-    def __init__(self, camera_config: CameraConfig, repository=None, yolo_config=None):
+    def __init__(self, camera_config: CameraConfig, yolo_config=None):
         self.on = True
         self.camera_config = camera_config
         self.yolo_config = yolo_config if yolo_config else YoloConfig.basic()
-        self.repository = repository
+        self.area_service = AreaService()
+        self.event_service = EventService()
         self.capture = Receiver(camera_config)
         self.net = self.yolo_config.net()
 
     def stop(self):
         self.on = False
+        self.capture.stop()
 
     def get_output_layers(self):
         layer_names = self.net.getLayerNames()
@@ -73,8 +78,7 @@ class CameraAnalyzer:
 
                     label = str(self.yolo_config.classes[class_id])
 
-                    if self.repository:
-                        self.repository.insert_into_events(label, str(confidence), x, y, w, h)
+                    self.area_service.get_areas(self.camera_config.id)
 
                     class_ids.append(class_id)
                     confidences.append(float(confidence))

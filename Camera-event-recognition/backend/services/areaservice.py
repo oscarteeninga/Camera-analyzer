@@ -10,18 +10,31 @@ class AreaService:
     def __init__(self):
         self.repository = AreasRepository(DATABASE)
 
-    def get_areas(self, id=None, name=None):
-        database_areas = self.repository.read_areas(id, name)
-        return self.parse_areas(database_areas)
+    def get_areas(self, camera_id=None):
+        return [AreaConfig.from_list(l) for l in self.repository.read_areas(camera_id)]
+
+    def get_areas_json(self, camera_id=None):
+        return [area.to_json() for area in self.get_areas(camera_id)]
+
+    def get_area(self, camera_id, area_name):
+        areas = self.get_areas(camera_id)
+        for area in areas:
+            if area.name == area_name:
+                return area
+        return None
+
+    def get_area_json(self, camera_id, area_name):
+        area = self.get_area(camera_id, area_name)
+        return area.to_json() if area else None
 
     def recognize_area(self, x, y, width, height):
         areas = cache.get(Dictionaries.AREAS)
+        #DOWYJEBANIA
         for area in areas:
             detect_box = AreaConfig(area.get('name'), float(area.get('x')), float(area.get('y')),
                                     float(area.get('width')), float(area.get('height')))
             if float(area.get('confidence_required')) <= detect_box.coverage(x, y, width, height):
                 return area.get('name')
-        return None
 
     def add_area(self, name, confidence_required, x, y, w, h, camera_id):
         self.repository.insert_area(name, confidence_required, x, y, w, h, camera_id)

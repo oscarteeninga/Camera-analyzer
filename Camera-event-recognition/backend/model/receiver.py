@@ -6,12 +6,16 @@ class Receiver:
     def __init__(self, camera_config: CameraConfig):
         self.cap = camera_config.capture()
         self.q = queue.Queue()
+        self.on = True
         t = threading.Thread(target=self._reader)
         t.daemon = True
         t.start()
 
+    def stop(self):
+        self.on = False
+
     def _reader(self):
-        while True:
+        while self.on:
             ret, frame = self.cap.read()
             if not ret:
                 break

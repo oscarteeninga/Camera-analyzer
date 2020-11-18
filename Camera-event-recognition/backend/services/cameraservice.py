@@ -16,27 +16,16 @@ class CameraService:
         return id_to_name, name_to_id
 
     def add_config(self, config: CameraConfig):
-        id = self.repository.insert_camera(config.name, config.ip, config.username, config.password)
-        ip_to_name, name_to_ip = self.get_camera_name_id_mapping()
-        cache.set(Dictionaries.CAMERA_IP_TO_NAME, ip_to_name)
-        cache.set(Dictionaries.CAMERA_NAME_TO_IP, name_to_ip)
-        return id
+        self.repository.insert_camera(config.id, config.ip, config.username, config.password)
 
-    def update_config(self, id, name, ip, username, password):
-        self.repository.update_camera(id, name, ip, username, password)
-        ip_to_name, name_to_ip = self.get_camera_name_id_mapping()
-        cache.set(Dictionaries.CAMERA_IP_TO_NAME, ip_to_name)
-        cache.set(Dictionaries.CAMERA_NAME_TO_IP, name_to_ip)
-        return id
+    def update_config(self, id, ip, username, password):
+        self.repository.update_camera(id, ip, username, password)
 
     def delete_config(self, id):
         self.repository.delete_camera(id)
-        ip_to_name, name_to_ip = self.get_camera_name_id_mapping()
-        cache.set(Dictionaries.CAMERA_IP_TO_NAME, ip_to_name)
-        cache.set(Dictionaries.CAMERA_NAME_TO_IP, name_to_ip)
 
-    def get_config(self, name):
-        return CameraConfig.from_list(self.repository.read_camera(name))
+    def get_config(self, id):
+        return CameraConfig.from_list(self.repository.read_camera(id))
 
     def get_configs(self):
         return [CameraConfig.from_list(camera) for camera in self.repository.read_cameras()]
@@ -44,25 +33,9 @@ class CameraService:
     def get_ips(self):
         return [config.ip for config in self.get_configs()]
 
-    def get_camera(self, id):
-        camera = self.repository.read_camera(id)
-        return {
-            "id": camera[0],
-            "name": camera[1],
-            "ip": camera[2],
-            "user": camera[3],
-            "password": camera[4]
-        }
+    def get_config_json(self, id):
+        conf = self.get_config(id)
+        return conf.to_json() if conf else None
 
-    def get_cameras(self):
-        jsons = []
-        for camera in self.repository.read_cameras():
-            dic = {
-                "id": camera[0],
-                "name": camera[1],
-                "ip": camera[2],
-                "user": camera[3],
-                "password": camera[4]
-            }
-            jsons.append(dic)
-        return jsons
+    def get_configs_json(self):
+        return [camera.to_json() for camera in self.get_configs()]

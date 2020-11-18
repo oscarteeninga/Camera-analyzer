@@ -4,8 +4,8 @@ import numpy as np
 
 class YoloConfig:
 
-    @classmethod
-    def basic(cls):
+    @staticmethod
+    def basic():
         return YoloConfig(608, "yolo/cfg/yolov3.weights", "yolo/cfg/yolov3.txt",
                           "yolo/cfg/yolov3.cfg")
 
