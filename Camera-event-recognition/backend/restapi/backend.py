@@ -34,10 +34,10 @@ camera_request = app.model('Camera configuration params', {
 
 area = app.model('Area configuration params', {
     'coverage_required': fields.Float(required=True, description='coverage needed to register event'),
-    'x': fields.Float(required=True, description='X cord of start of area'),
-    'y': fields.Float(required=True, description='Y cord of start of area'),
-    'width': fields.Float(required=True, description='The width of area'),
-    'height': fields.Float(required=True, description='The height of area')
+    'x': fields.Integer(required=True, description='X cord of start of area'),
+    'y': fields.Integer(required=True, description='Y cord of start of area'),
+    'width': fields.Integer(required=True, description='The width of area'),
+    'height': fields.Integer(required=True, description='The height of area')
 })
 
 
@@ -207,12 +207,12 @@ class AreaId(Resource):
     @app.expect(area)
     def put(self, id):
         """Update area with given name for device of given id"""
-        confidence_required = request.json['area_confidence_required']
-        x = request.json['area_x']
-        y = request.json['area_y']
-        w = request.json['area_width']
-        h = request.json['area_height']
-        area_service.update_area(id, confidence_required, x, y, w, h)
+        coverage_required = request.json['coverage_required']
+        x = request.json['x']
+        y = request.json['y']
+        w = request.json['width']
+        h = request.json['height']
+        area_service.update_area(id, coverage_required, x, y, w, h)
         return {'success': True}, 200, {'ContentType': 'application/json'}
 
     def delete(self, id):

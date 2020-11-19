@@ -2,7 +2,7 @@ import numpy as np
 
 
 class AreaConfig:
-    def __init__(self, id, name, x, y, width, height, coverage_required, camera_id):
+    def __init__(self, id, name, coverage_required, x, y, width, height, camera_id):
         self.id = id
         self.name = name
         self.x = x
