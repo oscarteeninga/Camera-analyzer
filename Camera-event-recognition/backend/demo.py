@@ -7,8 +7,8 @@ from services.cameraservice import CameraService
 from services.eventservice import EventService
 
 event_service = EventService()
-camera_service = CameraService()
 area_service = AreaService(event_service)
+camera_service = CameraService(area_service)
 camera_id = camera_service.add_config("kamera", "192.168.1.108", "admin", "camera123")
 area_id = area_service.add_area(0.5, 0, 0, 1000, 1000, camera_id)
 try:

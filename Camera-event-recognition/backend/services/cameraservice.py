@@ -3,8 +3,9 @@ from repositories.repositories import CamerasRepository, DATABASE
 
 
 class CameraService:
-    def __init__(self):
+    def __init__(self, area_service):
         self.repository = CamerasRepository(DATABASE)
+        self.area_service = area_service
 
     def get_camera_name_id_mapping(self):
         id_to_name = {}
@@ -15,7 +16,9 @@ class CameraService:
         return id_to_name, name_to_id
 
     def add_config(self, name, ip, username, password):
-        return self.repository.insert_camera(name, ip, username, password)
+        camera_id = self.repository.insert_camera(name, ip, username, password)
+        self.area_service.add_area(0, 0, 0, 0, 0, camera_id)
+        return camera_id
 
     def update_config(self, id, name, ip, username, password):
         self.repository.update_camera(id, name, ip, username, password)

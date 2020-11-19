@@ -1,7 +1,6 @@
 import io
 import time
 
-from config.cameraconfig import CameraConfig
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from flask_restplus import Api, fields, Resource
@@ -13,7 +12,7 @@ from services.eventservice import EventService
 
 event_service = EventService()
 area_service = AreaService(event_service)
-camera_service = CameraService()
+camera_service = CameraService(area_service)
 analyzer_service = AnalyzerService(event_service, camera_service, area_service)
 
 flask_app = Flask(__name__)
@@ -84,11 +83,11 @@ class Device(Resource):
     @app.expect(camera_request)
     def post(self):
         """Create camera device"""
-        id = request.json['id']
+        name = request.json['name']
         ip = request.json['ip']
         username = request.json['user']
         password = request.json['password']
-        camera_service.add_config(CameraConfig(id, ip, username, password))
+        camera_service.add_config(name, ip, username, password)
         return {'success': True}, 200, {'ContentType': 'application/json'}
 
     def get(self):

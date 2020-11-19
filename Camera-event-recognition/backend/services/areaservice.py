@@ -1,11 +1,7 @@
 from config.areaconfig import AreaConfig
-from repositories.repositories import DATABASE
-from services.cameraservice import CameraService
-
 from repositories.areacache import AreaCache
+from repositories.repositories import DATABASE
 from services.eventservice import EventService
-
-camera_service = CameraService()
 
 
 class AreaService:

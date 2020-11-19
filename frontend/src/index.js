@@ -1,9 +1,10 @@
 import React, {Component} from 'react';
 import ReactDOM from 'react-dom';
 import Api from "./app/Api";
-import {Row, Table} from "react-materialize";
+import {Button, Col, Row, Table} from "react-materialize";
 import 'materialize-css/dist/css/materialize.min.css'
 import EditCamera from "./components/EditCamera";
+import AreaView from "./components/AreaView";
 
 
 class DeviceList extends Component {
@@ -12,7 +13,7 @@ class DeviceList extends Component {
         loading: true,
         error: undefined,
         model: {},
-        areaView: false
+        areaView: undefined
     };
 
     componentDidMount() {
@@ -52,7 +53,7 @@ class DeviceList extends Component {
     render() {
         return (
             <div className="App">
-                {!this.state.areaView(<div className="row">
+                {this.state.areaView === undefined && (<div className="row">
                     <div className="row">
                         <a className="waves-effect waves-light btn modal-trigger"
                            data-target="edit_camera"
@@ -89,16 +90,30 @@ class DeviceList extends Component {
                                         <td>{name} </td>
                                         <td>{ip} </td>
                                         <td>
-                                            <a className="waves-effect waves-light btn modal-trigger"
-                                               data-target="edit_camera"
-                                               style={{float: 'right'}}
-                                               onClick={() => {
-                                                   const device = this.state.devices.find(d => d.id === id);
-                                                   this.setState({
-                                                       model: device
-                                                   })
-                                               }}
-                                            >Edit</a>
+                                            <div className="row">
+                                                <button className="waves-effect waves-light btn modal-trigger"
+                                                        data-target="edit_camera"
+                                                        style={{float: 'right', 'background-color':'#48a999'}}
+                                                        onClick={() => {
+                                                            const device = this.state.devices.find(d => d.id === id);
+                                                            this.setState({
+                                                                model: device
+                                                            })
+                                                        }}
+                                                >Edit
+                                                </button>
+                                            </div>
+                                            <div className="row">
+                                                <button className="waves-effect waves-light btn"
+                                                        style={{float: 'right', 'background-color': '#004c40'}}
+                                                        onClick={() => {
+                                                            this.setState({
+                                                                areaView: id
+                                                            })
+                                                        }}
+                                                >Areas
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 )
@@ -106,7 +121,7 @@ class DeviceList extends Component {
                             </tbody>
                         </Table>)}
                 </div>)}
-                {this.state.areaView(<AreaView/>)}
+                {this.state.areaView !== undefined ? (<AreaView/>) : <div/>}
             </div>
         )
     }

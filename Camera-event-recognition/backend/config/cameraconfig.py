@@ -18,7 +18,8 @@ class CameraConfig:
         return {
             'id': self.id,
             'ip': self.ip,
-            'username': self.username,
+            'name': self.name,
+            'user': self.username,
             'password': self.password
         }
 

@@ -1,9 +1,6 @@
 import time
 
 from repositories.repositories import EventsRepository, DATABASE
-from services.cameraservice import CameraService
-
-camera_service = CameraService()
 
 
 class EventService:
