@@ -2,12 +2,10 @@ import time
 
 import cv2
 import numpy as np
-from config.yoloconfig import YoloConfig
-from config.cameraconfig import CameraConfig
 from config.areaconfig import AreaConfig
+from config.cameraconfig import CameraConfig
+from config.yoloconfig import YoloConfig
 from model.receiver import Receiver
-
-from services.areaservice import AreaService
 from services.eventservice import EventService
 
 CONSOLE_INFO = 0
@@ -15,12 +13,12 @@ CONSOLE_INFO = 0
 
 class Analyzer:
 
-    def __init__(self, camera_config: CameraConfig, yolo_config=None):
+    def __init__(self, event_service, area_service, camera_config: CameraConfig, yolo_config=None):
         self.on = True
         self.camera_config = camera_config
         self.yolo_config = yolo_config if yolo_config else YoloConfig.basic()
-        self.area_service = AreaService()
-        self.event_service = EventService()
+        self.event_service: EventService = event_service
+        self.area_service = area_service
         self.capture = Receiver(camera_config)
         self.net = self.yolo_config.net()
 
@@ -78,7 +76,9 @@ class Analyzer:
 
                     label = str(self.yolo_config.classes[class_id])
 
-                    self.area_service.get_areas(self.camera_config.id)
+                    self.area_service.insert_events_for_areas(self.camera_config.id,
+                                                              self.camera_config.name, label,
+                                                              confidence, x, y, w, h)
 
                     class_ids.append(class_id)
                     confidences.append(float(confidence))

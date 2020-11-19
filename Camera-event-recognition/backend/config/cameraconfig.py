@@ -1,5 +1,3 @@
-import time
-
 import cv2
 
 
@@ -7,13 +5,11 @@ class CameraConfig:
 
     @staticmethod
     def from_list(l):
-        if not l or len(l) != 4:
-            return None
-        else:
-            return CameraConfig(l[0], l[1], l[2], l[3])
+        return CameraConfig(l[0], l[1], l[2], l[3], l[4])
 
-    def __init__(self, id, ip, username, password):
+    def __init__(self, id, name, ip, username, password):
         self.id = id
+        self.name = name
         self.ip = ip
         self.username = username
         self.password = password

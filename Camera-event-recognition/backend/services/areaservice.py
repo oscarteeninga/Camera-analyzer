@@ -1,51 +1,77 @@
 from config.areaconfig import AreaConfig
-from repositories.repositories import AreasRepository, DATABASE
-from services.cacheservice import cache, Dictionaries
+from repositories.repositories import DATABASE
 from services.cameraservice import CameraService
+
+from repositories.areacache import AreaCache
+from services.eventservice import EventService
 
 camera_service = CameraService()
 
 
 class AreaService:
-    def __init__(self):
-        self.repository = AreasRepository(DATABASE)
+    def __init__(self, event_service: EventService):
+        self.repository = AreaCache(DATABASE)
+        self.event_service = event_service
 
-    def get_areas(self, camera_id=None):
-        return [AreaConfig.from_list(l) for l in self.repository.read_areas(camera_id)]
+    def to_json_single(self, area, name):
+        return {
+            "id": area[0],
+            "coverage_required": area[1],
+            "x": area[2],
+            "y": area[3],
+            "width": area[4],
+            "height": area[5],
+            "camera_id": area[6],
+            "name": name
+        }
 
     def get_areas_json(self, camera_id=None):
-        return [area.to_json() for area in self.get_areas(camera_id)]
+        areas = self.repository.read_areas_for_one_camera(camera_id)
+        areas = areas[0:4]
 
-    def get_area(self, camera_id, area_name):
-        areas = self.get_areas(camera_id)
-        for area in areas:
-            if area.name == area_name:
-                return area
-        return None
+        names = self.get_area_names(areas)
+        return [self.to_json_single(area, names[area]) for area in
+                areas]
 
-    def get_area_json(self, camera_id, area_name):
-        area = self.get_area(camera_id, area_name)
-        return area.to_json() if area else None
+    def get_area_names(self, areas):
+        result = {}
+        if len(areas) > 0:
+            result[areas[0]] = "A"
+        if len(areas) > 1:
+            result[areas[1]] = "B"
+        if len(areas) > 2:
+            result[areas[2]] = "C"
+        if len(areas) > 3:
+            result[areas[3]] = "D"
+        return result
 
-    def recognize_area(self, x, y, width, height):
-        areas = cache.get(Dictionaries.AREAS)
-        #DOWYJEBANIA
-        for area in areas:
-            detect_box = AreaConfig(area.get('name'), float(area.get('x')), float(area.get('y')),
-                                    float(area.get('width')), float(area.get('height')))
-            if float(area.get('confidence_required')) <= detect_box.coverage(x, y, width, height):
-                return area.get('name')
+    def insert_events_for_areas(self, camera_id, camera_name, type, confidence, x, y, w, h):
+        areas = self.repository.read_areas_for_one_camera(camera_id)
+        if len(areas) == 0:
+            self.event_service.insert_event(type, confidence, "A", camera_name)
+        else:
+            names = self.get_area_names(areas)
+            for area in areas:
+                area_config = AreaConfig.from_list(area)
+                if area_config.fits(x, y, w, h):
+                    self.event_service.insert_event(type, confidence, names[area], camera_name)
 
-    def add_area(self, name, confidence_required, x, y, w, h, camera_id):
-        self.repository.insert_area(name, confidence_required, x, y, w, h, camera_id)
-        cache.set(Dictionaries.AREAS, self.get_areas())
+    def get_area_json(self, area_id):
+        area = self.repository.read_area(area_id)
+        camera_areas = self.repository.read_areas_for_one_camera(int(area[6]))
+        names = self.get_area_names(camera_areas)
+        for a in camera_areas:
+            if int(a[0]) == int(area[0]):
+                return self.to_json_single(area, names[a])
 
-    def update_area(self, new_name, confidence_required, x, y, w, h, camera_id, name):
-        self.repository.update_area(new_name, confidence_required, x, y, w, h, camera_id, name)
-        cache.set(Dictionaries.AREAS, self.get_areas())
+    def add_area(self, coverage_required, x, y, w, h, camera_id):
+        return self.repository.insert_area(coverage_required, x, y, w, h, camera_id)
 
-    def delete_area(self, id, name):
-        self.repository.delete_area(id, name)
+    def update_area(self, coverage_required, x, y, w, h, camera_id, name):
+        self.repository.update_area(coverage_required, x, y, w, h, camera_id, name)
+
+    def delete_area(self, id):
+        self.repository.delete_area(id)
 
     @staticmethod
     def parse_areas(areas):

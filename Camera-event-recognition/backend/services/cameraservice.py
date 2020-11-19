@@ -1,6 +1,5 @@
 from config.cameraconfig import CameraConfig
 from repositories.repositories import CamerasRepository, DATABASE
-from services.cacheservice import cache, Dictionaries
 
 
 class CameraService:
@@ -15,11 +14,11 @@ class CameraService:
             name_to_id[camera[1]] = camera[0]
         return id_to_name, name_to_id
 
-    def add_config(self, config: CameraConfig):
-        self.repository.insert_camera(config.id, config.ip, config.username, config.password)
+    def add_config(self, name, ip, username, password):
+        return self.repository.insert_camera(name, ip, username, password)
 
-    def update_config(self, id, ip, username, password):
-        self.repository.update_camera(id, ip, username, password)
+    def update_config(self, id, name, ip, username, password):
+        self.repository.update_camera(id, name, ip, username, password)
 
     def delete_config(self, id):
         self.repository.delete_camera(id)

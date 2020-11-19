@@ -1,16 +1,16 @@
-from PIL import Image
-import numpy as np
 import threading
 
+import numpy as np
+from PIL import Image
 from model.analyzer import Analyzer
-from services.cameraservice import CameraService
 
 
 class AnalyzerService:
-
-    def __init__(self):
+    def __init__(self, event_service, camera_service, area_service):
         self.analyzers = {}
-        self.camera_service = CameraService()
+        self.camera_service = camera_service
+        self.area_service = area_service
+        self.event_service = event_service
 
     def add(self, analyzer: Analyzer, camera_name):
         self.analyzers[camera_name] = analyzer
@@ -20,7 +20,7 @@ class AnalyzerService:
         if conf is None or conf in self.analyzers.keys():
             return False
         else:
-            analyzer = Analyzer(conf)
+            analyzer = Analyzer(self.event_service, self.area_service, conf)
             thread = threading.Thread(target=analyzer.video, args=(True,))
             # thread.start()
             self.analyzers[conf] = analyzer
@@ -28,7 +28,7 @@ class AnalyzerService:
 
     def start_all(self):
         for conf in self.camera_service.get_configs():
-            analyzer = Analyzer(conf)
+            analyzer = Analyzer(self.event_service, self.area_service, conf)
             thread = threading.Thread(target=analyzer.video, args=(True,))
             # thread.start()
             self.analyzers[conf] = analyzer

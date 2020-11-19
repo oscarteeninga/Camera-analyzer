@@ -1,24 +1,20 @@
-import threading
-import time
-import numpy as np
 import io
-from PIL import Image
+import time
 
 from config.cameraconfig import CameraConfig
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from flask_restplus import Api, fields, Resource
-from model.analyzer import Analyzer
+from services.analyzerservice import AnalyzerService
 from services.areaservice import AreaService
 from services.cacheservice import cache, Dictionaries
 from services.cameraservice import CameraService
 from services.eventservice import EventService
-from services.analyzerservice import AnalyzerService
 
-analyzer_service = AnalyzerService()
 event_service = EventService()
-area_service = AreaService()
+area_service = AreaService(event_service)
 camera_service = CameraService()
+analyzer_service = AnalyzerService(event_service, camera_service, area_service)
 
 flask_app = Flask(__name__)
 CORS(flask_app)
@@ -28,13 +24,12 @@ cache.init_app(flask_app)
 ip_to_name, name_to_ip = camera_service.get_camera_name_id_mapping()
 cache.add(Dictionaries.CAMERA_IP_TO_NAME, ip_to_name)
 cache.add(Dictionaries.CAMERA_NAME_TO_IP, name_to_ip)
-cache.add(Dictionaries.AREAS, area_service.get_areas())
 
 configuration_name_space = app.namespace('configuration')
-device_name_space = app.namespace('device')
-analyzer_name_space = app.namespace('analyzer')
-events_name_space = app.namespace('event')
-area_name_space = app.namespace('area')
+device_name_space = app.namespace('devices')
+analyzer_name_space = app.namespace('')
+events_name_space = app.namespace('events')
+area_name_space = app.namespace('areas')
 
 camera_request = app.model('Camera configuration params', {
     'id': fields.String(required=True, description='Id of the camera'),
@@ -55,18 +50,17 @@ area = app.model('Area configuration params', {
 })
 
 
-@events_name_space.route("/timestamp")
+@app.route("/timestamp")
 class Events(Resource):
-    @app.doc(params={'date_from': 'Oldest date from which events are downloaded'})
     def get(self):
         return str(time.time() * 1000)
 
 
-@events_name_space.route("/events")
+@events_name_space.route("")
 class Events(Resource):
     @app.doc(params={'date_from': 'Oldest date from which events are downloaded'})
-    @app.doc(params={'page': 'Oldest date from which events are downloaded'})
-    @app.doc(params={'size': 'Oldest date from which events are downloaded'})
+    @app.doc(params={'page': 'offset'})
+    @app.doc(params={'size': 'data size'})
     def get(self):
         """Return list of events at a given time"""
         date_from = request.args.get("date_from")
@@ -97,13 +91,9 @@ class Device(Resource):
         camera_service.add_config(CameraConfig(id, ip, username, password))
         return {'success': True}, 200, {'ContentType': 'application/json'}
 
-
-@device_name_space.route('/all')
-class DeviceAll(Resource):
     def get(self):
         """Returns camera devices"""
         response = jsonify(camera_service.get_configs_json())
-        response.headers.add('Access-Control-Allow-Origin', '*')
         return response
 
 
@@ -132,10 +122,6 @@ class DeviceIdAreas(Resource):
     def get(self, id):
         """Return list of areas for camera device of given id"""
         return area_service.get_areas_json(camera_id=id)
-
-@device_name_space.route('/<string:id>/area')
-class DeviceIdArea(Resource):
-
     @app.expect(area)
     def post(self, id):
         name = request.json['area_name']
@@ -148,11 +134,11 @@ class DeviceIdArea(Resource):
         return {'success': True}, 200, {'ContentType': 'application/json'}
 
 
-@device_name_space.route('/<string:id>/area/<name>')
+@device_name_space.route('/<string:device_id>/areas/<string:area_id>')
 class DeviceIdAreaName(Resource):
-    def get(self, id, name):
+    def get(self, device_id, area_id):
         """Return area by name for camera device of given id"""
-        return area_service.get_area_json(camera_id=id, area_name=name)
+        return area_service.get_area_json(area_id)
 
     @app.expect(area)
     def put(self, id, name):

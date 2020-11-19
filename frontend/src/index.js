@@ -11,7 +11,8 @@ class DeviceList extends Component {
         devices: [],
         loading: true,
         error: undefined,
-        model: {}
+        model: {},
+        areaView: false
     };
 
     componentDidMount() {
@@ -51,58 +52,61 @@ class DeviceList extends Component {
     render() {
         return (
             <div className="App">
-                <div className="row">
-                    <a className="waves-effect waves-light btn modal-trigger"
-                       data-target="edit_camera"
-                       onClick={() => {
-                           this.setState({
-                               model: {"id": undefined}
-                           })
-                       }}
-                    >Add Camera</a>
-                </div>
-                <EditCamera model={this.state.model} callback={() => {
-                    this.loadList()
-                }}/>
-                {!this.state.error && this.state.loading ? (<Row>Fetching data...</Row>) : this.state.error ? (
-                    <Row>{this.state.error}</Row>
-                ) : (
-                    <Table>
-                        <thead>
-                        <tr>
-                            <th data-field="name">
-                                Name
-                            </th>
-                            <th data-field="ip">
-                                Ip Address
-                            </th>
-                            <th>
-                            </th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {(this.state.devices.length > 0 && this.state.devices.map((
-                            ({id, name, ip}) => (
-                                <tr>
-                                    <td>{name} </td>
-                                    <td>{ip} </td>
-                                    <td>
-                                        <a className="waves-effect waves-light btn modal-trigger"
-                                           data-target="edit_camera"
-                                           style={{float: 'right'}}
-                                           onClick={() => {
-                                               const device = this.state.devices.find(d => d.id === id);
-                                               this.setState({
-                                                   model: device
-                                               })
-                                           }}
-                                        >Edit</a>
-                                    </td>
-                                </tr>
-                            )
-                        )))}
-                        </tbody>
-                    </Table>)}
+                {!this.state.areaView(<div className="row">
+                    <div className="row">
+                        <a className="waves-effect waves-light btn modal-trigger"
+                           data-target="edit_camera"
+                           onClick={() => {
+                               this.setState({
+                                   model: {"id": undefined}
+                               })
+                           }}
+                        >Add Camera</a>
+                    </div>
+                    <EditCamera model={this.state.model} callback={() => {
+                        this.loadList()
+                    }}/>
+                    {!this.state.error && this.state.loading ? (<Row>Fetching data...</Row>) : this.state.error ? (
+                        <Row>{this.state.error}</Row>
+                    ) : (
+                        <Table>
+                            <thead>
+                            <tr>
+                                <th data-field="name">
+                                    Name
+                                </th>
+                                <th data-field="ip">
+                                    Ip Address
+                                </th>
+                                <th>
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {(this.state.devices.length > 0 && this.state.devices.map((
+                                ({id, name, ip}) => (
+                                    <tr>
+                                        <td>{name} </td>
+                                        <td>{ip} </td>
+                                        <td>
+                                            <a className="waves-effect waves-light btn modal-trigger"
+                                               data-target="edit_camera"
+                                               style={{float: 'right'}}
+                                               onClick={() => {
+                                                   const device = this.state.devices.find(d => d.id === id);
+                                                   this.setState({
+                                                       model: device
+                                                   })
+                                               }}
+                                            >Edit</a>
+                                        </td>
+                                    </tr>
+                                )
+                            )))}
+                            </tbody>
+                        </Table>)}
+                </div>)}
+                {this.state.areaView(<AreaView/>)}
             </div>
         )
     }
