@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import ReactDOM from 'react-dom';
 import Api from "./app/Api";
-import {Button, Col, Row, Table} from "react-materialize";
+import {Row, Table} from "react-materialize";
 import 'materialize-css/dist/css/materialize.min.css'
 import EditCamera from "./components/EditCamera";
 import AreaView from "./components/AreaView";
@@ -93,7 +93,7 @@ class DeviceList extends Component {
                                             <div className="row">
                                                 <button className="waves-effect waves-light btn modal-trigger"
                                                         data-target="edit_camera"
-                                                        style={{float: 'right', 'background-color':'#48a999'}}
+                                                        style={{float: 'right', 'backgroundColor': '#48a999'}}
                                                         onClick={() => {
                                                             const device = this.state.devices.find(d => d.id === id);
                                                             this.setState({
@@ -105,7 +105,7 @@ class DeviceList extends Component {
                                             </div>
                                             <div className="row">
                                                 <button className="waves-effect waves-light btn"
-                                                        style={{float: 'right', 'background-color': '#004c40'}}
+                                                        style={{float: 'right', 'backgroundColor': '#004c40'}}
                                                         onClick={() => {
                                                             this.setState({
                                                                 areaView: id
@@ -121,7 +121,7 @@ class DeviceList extends Component {
                             </tbody>
                         </Table>)}
                 </div>)}
-                {this.state.areaView !== undefined ? (<AreaView/>) : <div/>}
+                {this.state.areaView !== undefined ? (<AreaView deviceId={this.state.areaView}/>) : <div/>}
             </div>
         )
     }

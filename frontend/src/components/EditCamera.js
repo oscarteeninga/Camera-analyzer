@@ -105,7 +105,7 @@ class EditCamera extends Component {
                             }}>{this.state.id && this.state.id > 0 ? "Edit Camera" : "New Camera"}</h4>
                             {this.state.id && (
                                 <Button className="modal-close waves-effect waves-red"
-                                        style={{float: 'right', 'background-color': 'red'}}
+                                        style={{float: 'right', 'backgroundColor': 'red'}}
                                         onClick={() => {
                                             this.deleteCamera()
                                         }}>Delete</Button>
