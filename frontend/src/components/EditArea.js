@@ -10,6 +10,7 @@ class EditCamera extends Component {
         y: "",
         width: "",
         height: "",
+        coverage: "0",
         id: undefined,
         img: undefined
     };
@@ -34,10 +35,11 @@ class EditCamera extends Component {
         const url = id ? ApiService.getBaseUrl() + "/devices/" + camera_id + '/areas/' + id : ApiService.getBaseUrl() + '/devices/' + camera_id + '/areas';
         fetch(url, { // optional fetch options
             body: JSON.stringify({
-                name: this.state.name,
-                ip: this.state.ip,
-                user: this.state.user,
-                password: this.state.password
+                area_x: this.state.x,
+                area_y: this.state.y,
+                area_width: this.state.width,
+                area_height: this.state.height,
+                area_confidence_required: this.coverage
             }),
             method: this.state.id ? "PUT" : "POST",
             headers: {
@@ -73,7 +75,8 @@ class EditCamera extends Component {
                 y: this.props.model.y,
                 width: this.props.model.width,
                 height: this.props.model.height,
-                id: this.props.model.id
+                id: this.props.model.id,
+                coverage: this.props.model.coverage
             });
         return (
             <div>
@@ -127,6 +130,15 @@ class EditCamera extends Component {
                                    })
                                }} value={this.state.height}/>
                         <label htmlFor="height">height</label>
+                    </div>
+                    <div className="input-field col s6">
+                        <input placeholder="Area coverage" id="coverage" type="text" className="validate"
+                               onChange={e => {
+                                   this.setState({
+                                       coverage: e.target.value
+                                   })
+                               }} value={this.state.coverage}/>
+                        <label htmlFor="coverage">coverage</label>
                     </div>
                 </div>
                 {/*<img className="materialboxed" width="650" src={this.state.model.img}/>*/}
