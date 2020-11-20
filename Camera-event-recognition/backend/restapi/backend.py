@@ -19,11 +19,6 @@ flask_app = Flask(__name__)
 CORS(flask_app)
 app = Api(app=flask_app, title="Camera Api", default="Camera Api", default_label="Camera Api")
 
-cache.init_app(flask_app)
-ip_to_name, name_to_ip = camera_service.get_camera_name_id_mapping()
-cache.add(Dictionaries.CAMERA_IP_TO_NAME, ip_to_name)
-cache.add(Dictionaries.CAMERA_NAME_TO_IP, name_to_ip)
-
 configuration_name_space = app.namespace('configuration')
 device_name_space = app.namespace('devices')
 analyzer_name_space = app.namespace('')
@@ -31,21 +26,18 @@ events_name_space = app.namespace('events')
 area_name_space = app.namespace('areas')
 
 camera_request = app.model('Camera configuration params', {
-    'id': fields.String(required=True, description='Id of the camera'),
+    'name': fields.String(required=True, description='Id of the camera'),
     'ip': fields.String(required=True, description='Camera ip address'),
     'user': fields.String(required=True, description='Camera user'),
     'password': fields.String(required=True, description='Password to camera')
 })
 
 area = app.model('Area configuration params', {
-    'area_name': fields.String(required=True, description='Name of area'),
-    'area_confidence_required': fields.Float(required=True,
-                                             description='surface of object needed to be assign to area?'),
-    'area_x': fields.Float(required=True, description='X cord of start of area'),
-    'area_y': fields.Float(required=True, description='Y cord of start of area'),
-    'area_width': fields.Float(required=True,
-                               description='The width of area'),
-    'area_height': fields.Float(required=True, description='The height of area')
+    'coverage_required': fields.Float(required=True, description='coverage needed to register event'),
+    'x': fields.Integer(required=True, description='X cord of start of area'),
+    'y': fields.Integer(required=True, description='Y cord of start of area'),
+    'width': fields.Integer(required=True, description='The width of area'),
+    'height': fields.Integer(required=True, description='The height of area')
 })
 
 
@@ -102,12 +94,14 @@ class DeviceId(Resource):
         """Returns camera device by given id"""
         return camera_service.get_config_json(id)
 
+    @app.expect(camera_request)
     def put(self, id):
         """Update camera device"""
+        name = request.json['name']
         ip = request.json['ip']
         username = request.json['user']
         password = request.json['password']
-        camera_service.update_config(id, ip, username, password)
+        camera_service.update_config(id, name, ip, username, password)
         return {'success': True}, 200, {'ContentType': 'application/json'}
 
     def delete(self, id):
@@ -121,39 +115,15 @@ class DeviceIdAreas(Resource):
     def get(self, id):
         """Return list of areas for camera device of given id"""
         return area_service.get_areas_json(camera_id=id)
+
     @app.expect(area)
     def post(self, id):
-        name = request.json['area_name']
         confidence_required = request.json['area_confidence_required']
         x = request.json['area_x']
         y = request.json['area_y']
         w = request.json['area_width']
         h = request.json['area_height']
-        area_service.add_area(name, confidence_required, x, y, w, h, id)
-        return {'success': True}, 200, {'ContentType': 'application/json'}
-
-
-@device_name_space.route('/<string:device_id>/areas/<string:area_id>')
-class DeviceIdAreaName(Resource):
-    def get(self, device_id, area_id):
-        """Return area by name for camera device of given id"""
-        return area_service.get_area_json(area_id)
-
-    @app.expect(area)
-    def put(self, id, name):
-        """Update area with given name for device of given id"""
-        new_name = request.json['area_name']
-        confidence_required = request.json['area_confidence_required']
-        x = request.json['area_x']
-        y = request.json['area_y']
-        w = request.json['area_width']
-        h = request.json['area_height']
-        area_service.update_area(new_name, confidence_required, x, y, w, h, id, name)
-        return {'success': True}, 200, {'ContentType': 'application/json'}
-
-    def delete(self, id, name):
-        """Delete area with given name for device of given id"""
-        area_service.delete_area(id, name)
+        area_service.insert_area(confidence_required, x, y, w, h, id)
         return {'success': True}, 200, {'ContentType': 'application/json'}
 
 
@@ -226,3 +196,26 @@ class StopId(Resource):
 class Area(Resource):
     def get(self):
         return area_service.get_areas_json()
+
+
+@area_name_space.route('/<string:id>')
+class AreaId(Resource):
+    def get(self, id):
+        """Returns single area by id"""
+        return area_service.get_area_json(id)
+
+    @app.expect(area)
+    def put(self, id):
+        """Update area with given name for device of given id"""
+        coverage_required = request.json['coverage_required']
+        x = request.json['x']
+        y = request.json['y']
+        w = request.json['width']
+        h = request.json['height']
+        area_service.update_area(id, coverage_required, x, y, w, h)
+        return {'success': True}, 200, {'ContentType': 'application/json'}
+
+    def delete(self, id):
+        """Delete area with given id"""
+        area_service.delete_area(id)
+

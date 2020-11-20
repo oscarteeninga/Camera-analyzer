@@ -2,19 +2,21 @@ import numpy as np
 
 
 class AreaConfig:
-    def __init__(self, x, y, width, height, confidence_required, camera_id):
+    def __init__(self, id, name, coverage_required, x, y, width, height, camera_id):
+        self.id = id
+        self.name = name
         self.x = x
         self.y = y
         self.width = width
         self.height = height
-        self.coverage_required = float(confidence_required)
+        self.coverage_required = float(coverage_required)
         self.camera_id = camera_id
 
         self.color = np.random.uniform(0, 255, 3)
 
     @staticmethod
     def from_list(l):
-        return AreaConfig(l[2], l[3], l[4], l[5], l[1], l[6])
+        return AreaConfig(l[0], l[1], l[2], l[3], l[4], l[5], l[6], l[7])
 
     @staticmethod
     def field(a, b):
@@ -24,9 +26,8 @@ class AreaConfig:
             return a * b
 
     def fits(self, x, y, w, h):
-        cov = self.coverage(x, y, w, h)
-        requirement = self.coverage_required
-        return cov >= requirement
+        return self.coverage(x, y, w, h) >= self.coverage_required
+
     def coverage(self, x, y, width, height):
         x1 = max(self.x, x)
         y1 = max(self.y, y)
@@ -36,3 +37,14 @@ class AreaConfig:
         common_height = (y2 - y1)
         return self.field(common_width, common_height) / self.field(width, height)
 
+    def to_json(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "confidence_required": self.coverage_required,
+            "x": self.x,
+            "y": self.y,
+            "width": self.width,
+            "height": self.height,
+            "camera_id": self.camera_id
+        }

@@ -7,17 +7,9 @@ class CameraService:
         self.repository = CamerasRepository(DATABASE)
         self.area_service = area_service
 
-    def get_camera_name_id_mapping(self):
-        id_to_name = {}
-        name_to_id = {}
-        for camera in self.repository.read_cameras():
-            id_to_name[camera[0]] = camera[1]
-            name_to_id[camera[1]] = camera[0]
-        return id_to_name, name_to_id
-
     def add_config(self, name, ip, username, password):
         camera_id = self.repository.insert_camera(name, ip, username, password)
-        self.area_service.add_area(0, 0, 0, 0, 0, camera_id)
+        self.area_service.insert_area(0, 0, 0, 0, 0, camera_id)
         return camera_id
 
     def update_config(self, id, name, ip, username, password):
@@ -27,7 +19,8 @@ class CameraService:
         self.repository.delete_camera(id)
 
     def get_config(self, id):
-        return CameraConfig.from_list(self.repository.read_camera(id))
+        conf = self.repository.read_camera(id)
+        return CameraConfig.from_list(conf) if conf else None
 
     def get_configs(self):
         return [CameraConfig.from_list(camera) for camera in self.repository.read_cameras()]
