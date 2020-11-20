@@ -6,8 +6,9 @@ class YoloConfig:
 
     @staticmethod
     def basic():
-        return YoloConfig(608, "../yolo/cfg/yolov3.weights", "../yolo/cfg/yolov3.txt",
-                          "../yolo/cfg/yolov3.cfg")
+        # nie zmieniać tego, tylko ustawić sobie yolo jako resource w project structure
+        return YoloConfig(608, "yolo/cfg/yolov3.weights", "yolo/cfg/yolov3.txt",
+                          "yolo/cfg/yolov3.cfg")
 
     def __init__(self, batch_size, weights_file, classes_file, config_file):
         self.classes_file = classes_file

@@ -1,6 +1,8 @@
 from config.cameraconfig import CameraConfig
 from repositories.repositories import CamerasRepository, DATABASE
 
+import cv2
+
 
 class CameraService:
     def __init__(self, area_service):
@@ -34,3 +36,22 @@ class CameraService:
 
     def get_configs_json(self):
         return [camera.to_json() for camera in self.get_configs()]
+
+    def get_image(self, id):
+        conf = self.get_config(id)
+        if conf:
+            cap = conf.capture()
+            if cap.grab():
+                ret, image = cap.read()
+                (flag, encodedImage) = cv2.imencode(".jpg", image)
+                yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(encodedImage) + b'\r\n')
+
+    def get_video(self, id):
+        conf = self.get_config(id)
+        if conf:
+            cap = conf.capture()
+            while cap.grab():
+                ret, image = cap.read()
+                (flag, encodedImage) = cv2.imencode(".jpg", image)
+                yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(encodedImage) + b'\r\n')
+

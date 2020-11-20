@@ -1,7 +1,5 @@
 import threading
 
-import numpy as np
-from PIL import Image
 from model.analyzer import Analyzer
 
 
@@ -66,11 +64,4 @@ class AnalyzerService:
     def state(self, id):
         return self.state_response(self.camera_service.get_config(id))
 
-    def image(self, id):
-        conf = self.camera_service.get_config(id)
-        if conf is None or conf not in self.analyzers.keys():
-            return None
-        else:
-            analyzer = self.analyzers[conf]
-            return Image.fromarray(np.array(analyzer.capture.read()))
 

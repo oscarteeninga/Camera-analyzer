@@ -12,6 +12,7 @@ class Receiver:
         t.start()
 
     def stop(self):
+        self.cap.release()
         self.on = False
 
     def _reader(self):

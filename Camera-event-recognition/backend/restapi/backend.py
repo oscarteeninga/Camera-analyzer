@@ -1,12 +1,11 @@
 import io
 import time
 
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, Response
 from flask_cors import CORS
 from flask_restplus import Api, fields, Resource
 from services.analyzerservice import AnalyzerService
 from services.areaservice import AreaService
-from services.cacheservice import cache, Dictionaries
 from services.cameraservice import CameraService
 from services.eventservice import EventService
 
@@ -118,16 +117,16 @@ class DeviceIdAreas(Resource):
 
     @app.expect(area)
     def post(self, id):
-        confidence_required = request.json['area_confidence_required']
-        x = request.json['area_x']
-        y = request.json['area_y']
-        w = request.json['area_width']
-        h = request.json['area_height']
-        area_service.insert_area(confidence_required, x, y, w, h, id)
+        coverage_required = request.json['coverage_required']
+        x = request.json['x']
+        y = request.json['y']
+        w = request.json['width']
+        h = request.json['height']
+        area_service.insert_area(coverage_required, x, y, w, h, id)
         return {'success': True}, 200, {'ContentType': 'application/json'}
 
 
-@device_name_space.route('/<string:id>/image')
+@device_name_space.route('/<string:id>/img')
 class DeviceIdImage(Resource):
 
     @staticmethod
@@ -139,8 +138,24 @@ class DeviceIdImage(Resource):
 
     def get(self, id):
         """Returns image of camera device with given id"""
-        image = analyzer_service.image(id)
-        return self.send_image(image) if image else None
+        return Response(camera_service.get_image(id),
+                        mimetype="multipart/x-mixed-replace; boundary=frame")
+
+
+@device_name_space.route('/<string:id>/video')
+class DeviceIdImage(Resource):
+
+    @staticmethod
+    def send_image(image):
+        file_object = io.BytesIO()
+        image.save(file_object, 'PNG')
+        file_object.seek(0)
+        return send_file(file_object, mimetype='image/PNG')
+
+    def get(self, id):
+        """Returns image of camera device with given id"""
+        return Response(camera_service.get_video(id),
+                        mimetype="multipart/x-mixed-replace; boundary=frame")
 
 
 @analyzer_name_space.route('/state')

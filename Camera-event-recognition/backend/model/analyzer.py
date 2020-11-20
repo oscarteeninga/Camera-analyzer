@@ -13,10 +13,10 @@ CONSOLE_INFO = 0
 
 class Analyzer:
 
-    def __init__(self, event_service, area_service, camera_config: CameraConfig, yolo_config=None):
+    def __init__(self, event_service, area_service, camera_config: CameraConfig, yolo_config=YoloConfig.basic()):
         self.on = True
         self.camera_config = camera_config
-        self.yolo_config = yolo_config if yolo_config else YoloConfig.basic()
+        self.yolo_config = yolo_config
         self.event_service: EventService = event_service
         self.area_service = area_service
         self.capture = Receiver(camera_config)
