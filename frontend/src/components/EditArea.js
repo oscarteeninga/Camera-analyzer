@@ -3,20 +3,22 @@ import "materialize-css/dist/css/materialize.min.css";
 import PropTypes from 'prop-types'
 import ApiService from "../app/Api";
 import {Button} from "react-materialize";
+import M from "materialize-css";
+import CameraPreview from "./CameraPreview";
 
-class EditCamera extends Component {
+class EditArea extends Component {
     state = {
         x: "",
         y: "",
         width: "",
         height: "",
-        coverage: "0",
+        coverage: "",
         id: undefined,
         img: undefined
     };
 
     componentDidMount() {
-        const url = ApiService.getBaseUrl() + '/devices/' + this.props.camera_id + '/image';
+        const url = ApiService.getBaseUrl() + '/devices/' + this.props.camera_id + '/img';
         fetch(url).then(response => {
             response.blob().then(blob => {
                 const outside = URL.createObjectURL(blob);
@@ -25,7 +27,8 @@ class EditCamera extends Component {
                     img: blob
                 })
             })
-        })
+        });
+        M.updateTextFields();
     }
 
     postArea() {
@@ -68,6 +71,7 @@ class EditCamera extends Component {
             })
     }
 
+
     render() {
         if (this.state.id !== this.props.model.id)
             this.setState({
@@ -80,11 +84,17 @@ class EditCamera extends Component {
             });
         return (
             <div>
-                <div className="row">
-                    <h4 style={{
-                        display: 'inline-block',
-                        float: 'left'
-                    }}>{this.props.id && this.props.id > 0 ? "Edit Area" : "New Area"}</h4>
+                <div className="row" style={{'margin-top': '16px'}}>
+                    <a className="btn-flat waves-effect waves-green col s1" onClick={() => {
+                        this.props.dismiss()
+                    }}><i className="material-icons" style={{'font-size': '24px'}}>arrow_back</i></a>
+
+                    <button className="right col s1 waves-effect waves-green btn" onClick={() => {
+                        this.postArea();
+                        this.props.dismiss()
+                    }} style={{'margin-right': '16px'}}>
+                        Save
+                    </button>
                     {this.props.id && (
                         <Button className="modal-close waves-effect waves-red"
                                 style={{float: 'right', 'backgroundColor': 'red'}}
@@ -94,8 +104,9 @@ class EditCamera extends Component {
                     )}
                 </div>
                 <div className="row">
-                    <div className="input-field col s6">
-                        <input placeholder="Starting horizontal position" id="x" type="text" className="validate"
+                    <div className="input-field col s1">
+                        <input required placeholder="Starting horizontal position" id="x" type="text"
+                               className="active validate"
                                onChange={e => {
                                    this.setState({
                                        x: e.target.value
@@ -103,8 +114,9 @@ class EditCamera extends Component {
                                }} value={this.state.x}/>
                         <label htmlFor="x">x</label>
                     </div>
-                    <div className="input-field col s6">
-                        <input placeholder="Starting horizontal position" id="y" type="text" className="validate"
+                    <div className="input-field col s1">
+                        <input required placeholder="Starting horizontal position" id="y" type="text"
+                               className="active validate"
                                onChange={e => {
                                    this.setState({
                                        y: e.target.value
@@ -112,9 +124,9 @@ class EditCamera extends Component {
                                }} value={this.state.y}/>
                         <label htmlFor="y">y</label>
                     </div>
-                    <div className="input-field col s6">
-                        <input placeholder="Starting horizontal position" id="width" type="text"
-                               className="validate"
+                    <div className="input-field col s1">
+                        <input required placeholder="Starting horizontal position" id="width" type="text"
+                               className="active validate"
                                onChange={e => {
                                    this.setState({
                                        width: e.target.value
@@ -122,8 +134,8 @@ class EditCamera extends Component {
                                }} value={this.state.width}/>
                         <label htmlFor="width">width</label>
                     </div>
-                    <div className="input-field col s6">
-                        <input placeholder="Area height" id="height" type="text" className="validate"
+                    <div className="input-field col s1">
+                        <input required placeholder="Area height" id="height" type="text" className="active validate"
                                onChange={e => {
                                    this.setState({
                                        height: e.target.value
@@ -131,8 +143,9 @@ class EditCamera extends Component {
                                }} value={this.state.height}/>
                         <label htmlFor="height">height</label>
                     </div>
-                    <div className="input-field col s6">
-                        <input placeholder="Area coverage" id="coverage" type="text" className="validate"
+                    <div className="input-field col s2">
+                        <input required placeholder="Area coverage" id="coverage" type="number" min="0" max="100"
+                               className="active validate"
                                onChange={e => {
                                    this.setState({
                                        coverage: e.target.value
@@ -141,30 +154,25 @@ class EditCamera extends Component {
                         <label htmlFor="coverage">coverage</label>
                     </div>
                 </div>
-                {/*<img className="materialboxed" width="650" src={this.state.model.img}/>*/}
-                <div className="row">
-                    <a href="#" className=" waves-effect waves-red btn-flat" onClick={() => {
-                        this.props.dismiss()
-                    }}>
-                        Cancel
-                    </a>
-                    <a href="#" className=" waves-effect waves-green btn-flat" onClick={() => {
-                        this.postArea();
-                        this.props.dismiss()
-                    }}>
-                        Save
-                    </a>
-                </div>
+                <CameraPreview updateCallback={(x, y, w, h) => {
+                    this.setState({
+                        x: x.toString(),
+                        y: y.toString(),
+                        width: w.toString(),
+                        height: h.toString()
+                    })
+                }} camera_id={this.props.camera_id} x={this.state.x} y={this.state.y} width={this.state.width}
+                               height={this.state.height}/>
             </div>
         );
     }
 }
 
-EditCamera.propTypes = {
-    model: PropTypes.object.isRequired,
+EditArea.propTypes = {
+    model: PropTypes.object,
     callback: PropTypes.func.isRequired,
     dismiss: PropTypes.func.isRequired,
     camera_id: PropTypes.number.isRequired
 };
 
-export default EditCamera;
+export default EditArea;

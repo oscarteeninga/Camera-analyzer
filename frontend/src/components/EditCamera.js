@@ -3,7 +3,6 @@ import M from "materialize-css";
 import "materialize-css/dist/css/materialize.min.css";
 import PropTypes from 'prop-types'
 import ApiService from "../app/Api";
-import {Button} from "react-materialize";
 
 class EditCamera extends Component {
     state = {
@@ -21,6 +20,7 @@ class EditCamera extends Component {
             },
             onOpenEnd: () => {
                 console.log("Open End");
+                M.updateTextFields();
             },
             onCloseStart: () => {
                 console.log("Close Start");
@@ -36,6 +36,7 @@ class EditCamera extends Component {
             endingTop: "20%"
         };
         M.Modal.init(this.Modal, options);
+
         // If you want to work on instance of the Modal then you can use the below code snippet
         // let instance = M.Modal.getInstance(this.Modal);
         // instance.open();
@@ -79,7 +80,7 @@ class EditCamera extends Component {
     }
 
     render() {
-        if (this.state.id !== this.props.model.id)
+        if (this.state.id !== this.props.model.id) {
             this.setState({
                 id: this.props.model.id,
                 name: this.props.model.name,
@@ -88,6 +89,8 @@ class EditCamera extends Component {
                 password: this.props.model.password,
                 fps: this.props.model.fps
             });
+            M.updateTextFields();
+        }
         return (
             <>
                 <div
@@ -104,16 +107,16 @@ class EditCamera extends Component {
                                 float: 'left'
                             }}>{this.state.id && this.state.id > 0 ? "Edit Camera" : "New Camera"}</h4>
                             {this.state.id && (
-                                <Button className="modal-close waves-effect waves-red"
-                                        style={{float: 'right', 'backgroundColor': 'red'}}
-                                        onClick={() => {
-                                            this.deleteCamera()
-                                        }}>Delete</Button>
+                                <a className="right modal-close waves-effect waves-red btn-large red"
+                                   onClick={() => {
+                                       this.deleteCamera()
+                                   }}>Delete<i className="material-icons right">delete</i></a>
                             )}
                         </div>
                         <div className="row">
                             <div className="input-field col s6">
-                                <input placeholder="Outside House Camera" id="name" type="text" className="validate"
+                                <input placeholder="Outside House Camera" id="name" type="text"
+                                       className="active validate"
                                        onChange={e => {
                                            this.setState({
                                                name: e.target.value
@@ -122,7 +125,7 @@ class EditCamera extends Component {
                                 <label htmlFor="name">Name</label>
                             </div>
                             <div className="input-field col s6">
-                                <input placeholder="192.168.1.15" id="ip" type="text" className="validate"
+                                <input placeholder="192.168.1.15" id="ip" type="text" className="active validate"
                                        onChange={e => {
                                            this.setState({
                                                ip: e.target.value
@@ -133,7 +136,7 @@ class EditCamera extends Component {
                         </div>
                         <div className="row">
                             <div className="input-field col s6">
-                                <input placeholder="admin" id="first_name" type="text" className="validate"
+                                <input placeholder="admin" id="first_name" type="text" className="active validate"
                                        onChange={e => {
                                            this.setState({
                                                user: e.target.value
@@ -142,7 +145,7 @@ class EditCamera extends Component {
                                 <label htmlFor="user">User</label>
                             </div>
                             <div className="input-field col s6">
-                                <input id="password" type="text" className="validate" onChange={e => {
+                                <input id="password" type="password" className="active validate" onChange={e => {
                                     this.setState({
                                         password: e.target.value
                                     })
@@ -155,7 +158,7 @@ class EditCamera extends Component {
                         <a href="#" className="modal-close waves-effect waves-red btn-flat">
                             Cancel
                         </a>
-                        <a href="#" className="modal-close waves-effect waves-green btn-flat" onClick={() => {
+                        <a href="#" className="modal-close waves-effect waves-green btn" onClick={() => {
                             this.postCamera()
                         }}>
                             Save
