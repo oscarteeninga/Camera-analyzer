@@ -117,7 +117,7 @@ class CameraPreview extends Component {
             }}>
                 <img className="materialboxed" alt="" id="img"
                      width="1280" height="720" style={{"position": "absolute", "z-index": 1}}
-                     src={ApiService.getBaseUrl() + '/devices/' + this.props.camera_id + '/img'}/>
+                     src={ApiService.getPreview(this.props.camera_id)}/>
                 <canvas id="c" width="1280" height="720" style={{'position': 'relative', 'z-index': 20}}>
                 </canvas>
             </div>

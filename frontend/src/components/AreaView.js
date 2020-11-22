@@ -12,9 +12,8 @@ class AreaView extends Component {
         model: undefined
     };
 
-    loadList() {
-        const deviceId = this.props.device.id;
-        fetch(Api.getBaseUrl() + '/devices/' + deviceId + '/areas')
+    loadList(deviceId) {
+        Api.getAreas(deviceId)
             .then(response => {
                 if (response.status === 200) {
                     response.json()
@@ -28,13 +27,24 @@ class AreaView extends Component {
     }
 
     componentDidMount() {
-        this.loadList();
+        const deviceId = this.props.device.id;
+        this.loadList(deviceId);
         M.FloatingActionButton.init(this.FAB, {})
+    }
+
+    deleteArea(id) {
+        const deviceId = this.props.device.id;
+        Api.deleteArea(id).then(function (response) {
+        });
+        this.loadList(deviceId);
     }
 
     render() {
         const editArea = <EditArea model={this.state.model} camera_id={this.props.device.id} callback={() => {
-            this.loadList()
+            this.setState({
+                model: undefined
+            });
+            this.loadList(this.props.device.id);
         }} dismiss={() => {
             this.setState({
                 model: undefined
@@ -70,26 +80,24 @@ class AreaView extends Component {
                     </thead>
                     <tbody>
                     {(this.state.areas.length > 0 && this.state.areas.map((
-                        ({id, name, x, y, width, height, camera_id}) => (
+                        ({id, name, x, y, width, height, coverage_required}) => (
                             <tr>
                                 <td>{name} </td>
-                                <td>{'x: ' + x + ' y: ' + y + ' width: ' + width + ' height: ' + height} </td>
+                                <td>{'x: ' + x + ' y: ' + y + ' width: ' + width + ' height: ' + height + ' coverage: ' + coverage_required + '%'} </td>
                                 <td>
-                                    <button className="waves-effect waves-light btn modal-trigger"
-                                            data-target="edit_camera"
-                                            style={{
-                                                float: 'right',
-                                                'backgroundColor': '#48a999',
-                                                'margin-right': '16px'
-                                            }}
-                                            onClick={() => {
-                                                const area = this.state.areas.find(d => d.id === id);
-                                                this.setState({
-                                                    model: area
-                                                })
-                                            }}
-                                    >Edit
-                                    </button>
+                                    <div className="right">
+                                        <i className="material-icons waves-effect btn-flat" title="Edit Area"
+                                           onClick={() => {
+                                               const area = this.state.areas.find(d => d.id === id);
+                                               this.setState({
+                                                   model: area
+                                               })
+                                           }}>edit</i>
+                                        <i className="material-icons right waves-effect btn-flat" title="Delete Area"
+                                           onClick={() => {
+                                               this.deleteArea(id)
+                                           }}>delete</i>
+                                    </div>
                                 </td>
                             </tr>
                         )

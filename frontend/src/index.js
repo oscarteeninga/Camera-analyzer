@@ -18,11 +18,12 @@ class DeviceList extends Component {
 
     componentDidMount() {
         this.loadList();
-        M.FloatingActionButton.init(this.FAB, {})
+        M.FloatingActionButton.init(this.FAB, {});
+        document.title = "Camera Analyzer Config"
     }
 
     loadList() {
-        fetch(Api.getBaseUrl() + '/devices')
+        Api.getCameras()
             .then(response => {
                 if (this.state.error === undefined) {
                     if (response.status === 200) {
@@ -49,6 +50,12 @@ class DeviceList extends Component {
                 })
             });
 
+    }
+
+    deleteCamera(id) {
+        Api.deleteCamera(id).then(r => {
+            this.loadList();
+        })
     }
 
     render() {
@@ -97,32 +104,31 @@ class DeviceList extends Component {
                                         <td>{name} </td>
                                         <td>{ip} </td>
                                         <td>
-                                            <div className="row" style={{'margin-right': '16px'}}>
-                                                <button className="waves-effect waves-light btn modal-trigger"
-                                                        data-target="edit_camera"
-                                                        style={{float: 'right', 'backgroundColor': '#48a999'}}
-                                                        onClick={() => {
-                                                            const device = this.state.devices.find(d => d.id === id);
-                                                            this.setState({
-                                                                model: device
-                                                            })
-                                                        }}
-                                                >Edit
-                                                </button>
-                                            </div>
-                                            <div className="row" style={{'margin-right': '16px'}}>
-                                                <button className="waves-effect waves-light btn"
-                                                        style={{float: 'right', 'backgroundColor': '#004c40'}}
-                                                        onClick={() => {
-                                                            this.setState({
-                                                                areaView: {
-                                                                    id: id,
-                                                                    name: name
-                                                                }
-                                                            })
-                                                        }}
-                                                >Areas
-                                                </button>
+                                            <div className="right">
+                                                <i className="material-icons waves-effect btn-flat modal-trigger"
+                                                   data-target="edit_camera"
+                                                   title="Edit Camera"
+                                                   onClick={() => {
+                                                       const device = this.state.devices.find(d => d.id === id);
+                                                       this.setState({
+                                                           model: device
+                                                       })
+                                                   }}
+                                                >edit</i>
+                                                <i className="material-icons waves-effect btn-flat" title="Areas"
+                                                   onClick={() => {
+                                                       this.setState({
+                                                           areaView: {
+                                                               id: id,
+                                                               name: name
+                                                           }
+                                                       })
+                                                   }}>filter</i>
+                                                <i className="material-icons waves-effect btn-flat"
+                                                   title="Delete Camera"
+                                                   onClick={() => {
+                                                       this.deleteCamera(id)
+                                                   }}>delete</i>
                                             </div>
                                         </td>
                                     </tr>

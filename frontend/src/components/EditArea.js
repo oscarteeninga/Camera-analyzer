@@ -2,7 +2,6 @@ import React, {Component} from 'react';
 import "materialize-css/dist/css/materialize.min.css";
 import PropTypes from 'prop-types'
 import ApiService from "../app/Api";
-import {Button} from "react-materialize";
 import M from "materialize-css";
 import CameraPreview from "./CameraPreview";
 
@@ -13,62 +12,36 @@ class EditArea extends Component {
         width: "",
         height: "",
         coverage: "",
-        id: undefined,
-        img: undefined
+        id: undefined
     };
 
     componentDidMount() {
-        const url = ApiService.getBaseUrl() + '/devices/' + this.props.camera_id + '/img';
-        fetch(url).then(response => {
-            response.blob().then(blob => {
-                const outside = URL.createObjectURL(blob);
-                console.log(outside);
-                this.setState({
-                    img: blob
-                })
-            })
-        });
         M.updateTextFields();
+        M.FloatingActionButton.init(this.FAB, {});
+    }
+
+    deleteArea() {
+        const callback = this.props.callback;
+        ApiService.deleteArea(this.state.id).then(r => callback());
     }
 
     postArea() {
         const callback = this.props.callback;
         const camera_id = this.props.camera_id;
-        const id = this.props.id;
-        const url = id ? ApiService.getBaseUrl() + "/devices/" + camera_id + '/areas/' + id : ApiService.getBaseUrl() + '/devices/' + camera_id + '/areas';
-        fetch(url, { // optional fetch options
-            body: JSON.stringify({
-                area_x: this.state.x,
-                area_y: this.state.y,
-                area_width: this.state.width,
-                area_height: this.state.height,
-                area_confidence_required: this.coverage
-            }),
-            method: this.state.id ? "PUT" : "POST",
-            headers: {
-                'content-type': 'application/json'
+        const id = this.state.id;
+        const body = {
+            x: this.state.x,
+            y: this.state.y,
+            width: this.state.width,
+            height: this.state.height,
+            coverage_required: this.state.coverage
+        };
+        const fetch = id ? ApiService.putArea(id, body) : ApiService.postArea(camera_id, body);
+        fetch.then(function (response) {
+            if (response.status === 200) {
+                callback()
             }
         })
-            .then(function (response) {
-                if (response.status === 200) {
-                    callback()
-                }
-            })
-    }
-
-    deleteArea() {
-        const callback = this.props.callback;
-        const camera_id = this.props.camera_id;
-        const id = this.props.id;
-        const url = ApiService.getBaseUrl() + "/devices/" + camera_id + '/areas/' + id;
-        fetch(url, { // optional fetch options
-            method: "DELETE"
-        })
-            .then(function (response) {
-                if (response.status === 200) {
-                    callback()
-                }
-            })
     }
 
 
@@ -80,28 +53,31 @@ class EditArea extends Component {
                 width: this.props.model.width,
                 height: this.props.model.height,
                 id: this.props.model.id,
-                coverage: this.props.model.coverage
+                coverage: this.props.model.coverage_required
             });
         return (
             <div>
                 <div className="row" style={{'margin-top': '16px'}}>
-                    <a className="btn-flat waves-effect waves-green col s1" onClick={() => {
-                        this.props.dismiss()
-                    }}><i className="material-icons" style={{'font-size': '24px'}}>arrow_back</i></a>
-
-                    <button className="right col s1 waves-effect waves-green btn" onClick={() => {
+                    <a ref={FAB => {
+                        this.FAB = FAB;
+                    }} onClick={() => {
                         this.postArea();
                         this.props.dismiss()
-                    }} style={{'margin-right': '16px'}}>
-                        Save
-                    </button>
-                    {this.props.id && (
-                        <Button className="modal-close waves-effect waves-red"
-                                style={{float: 'right', 'backgroundColor': 'red'}}
-                                onClick={() => {
-                                    this.deleteArea()
-                                }}>Delete</Button>
-                    )}
+                    }}
+                       className="btn-floating btn-large waves-effect waves-light "
+                    >
+                        <i className="material-icons">done</i></a>
+                    <div className="right">
+                        {this.state.id && (<i className="material-icons waves-effect btn-flat"
+                                              style={{'font-size': '36px'}}
+                                              onClick={() => {
+                                                  this.deleteArea()
+                                              }}>delete</i>
+                        )}
+                        <i className="material-icons btn-flat waves-effect " onClick={() => {
+                            this.props.dismiss()
+                        }} style={{'font-size': '36px'}}>clear</i>
+                    </div>
                 </div>
                 <div className="row">
                     <div className="input-field col s1">

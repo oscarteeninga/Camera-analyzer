@@ -46,37 +46,27 @@ class EditCamera extends Component {
 
     postCamera() {
         const callback = this.props.callback;
-        const url = this.state.id ? ApiService.getBaseUrl() + "/devices/" + this.state.id : ApiService.getBaseUrl() + '/devices';
-        fetch(url, { // optional fetch options
-            body: JSON.stringify({
-                name: this.state.name,
-                ip: this.state.ip,
-                user: this.state.user,
-                password: this.state.password
-            }),
-            method: this.state.id ? "PUT" : "POST",
-            headers: {
-                'content-type': 'application/json'
+        const body = {
+            name: this.state.name,
+            ip: this.state.ip,
+            user: this.state.user,
+            password: this.state.password
+        };
+        const fetch = this.state.id ? ApiService.putCamera(this.state.id, body) : ApiService.postCamera(body);
+        fetch.then(function (response) {
+            if (response.status === 200) {
+                callback()
             }
         })
-            .then(function (response) {
-                if (response.status === 200) {
-                    callback()
-                }
-            })
     }
 
     deleteCamera() {
         const callback = this.props.callback;
-        const url = ApiService.getBaseUrl() + "/devices/" + this.state.id;
-        fetch(url, { // optional fetch options
-            method: "DELETE"
+        ApiService.deleteCamera(this.state.id).then(function (response) {
+            if (response.status === 200) {
+                callback()
+            }
         })
-            .then(function (response) {
-                if (response.status === 200) {
-                    callback()
-                }
-            })
     }
 
     render() {
@@ -107,7 +97,7 @@ class EditCamera extends Component {
                                 float: 'left'
                             }}>{this.state.id && this.state.id > 0 ? "Edit Camera" : "New Camera"}</h4>
                             {this.state.id && (
-                                <a className="right modal-close waves-effect waves-red btn-large red"
+                                <a className="right modal-close waves-effect waves-red btn red"
                                    onClick={() => {
                                        this.deleteCamera()
                                    }}>Delete<i className="material-icons right">delete</i></a>
