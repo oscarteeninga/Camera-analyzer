@@ -34,13 +34,14 @@ class AreaView extends Component {
 
     deleteArea(id) {
         const deviceId = this.props.device.id;
-        Api.deleteArea(id).then(function (response) {
+        Api.deleteArea(id).then((response) => {
+            this.loadList(deviceId);
         });
-        this.loadList(deviceId);
     }
 
     render() {
-        const editArea = <EditArea model={this.state.model} camera_id={this.props.device.id} callback={() => {
+        const editArea = <EditArea canBeDeleted={this.state.areas.length > 1} model={this.state.model}
+                                   camera_id={this.props.device.id} callback={() => {
             this.setState({
                 model: undefined
             });
@@ -53,17 +54,24 @@ class AreaView extends Component {
         const table =
             <div>
                 <div className="row">
+                    <i className="col s1 material-icons btn-flat waves-effect " onClick={() => {
+                        this.props.dismiss()
+                    }} style={{'font-size': '36px', 'margin-top': '24px'}}>arrow_back</i>
                     <h4 className="col s6">{this.props.device.name} areas</h4>
-                    <a ref={FAB => {
+                    {this.state.areas.length < 4 ? (<a ref={FAB => {
                         this.FAB = FAB;
                     }} onClick={() => {
                         this.setState({
                             model: {"id": undefined}
                         })
                     }}
-                       className="btn-floating btn-large waves-effect waves-light "
-                       style={{'float': 'right', 'margin-top': '16px', 'margin-right': '16px'}}>
-                        <i className="material-icons">add</i></a>
+                                                       className="btn-floating btn-large waves-effect waves-light "
+                                                       style={{
+                                                           'float': 'right',
+                                                           'margin-top': '16px',
+                                                           'margin-right': '16px'
+                                                       }}>
+                        <i className="material-icons">add</i></a>) : (<></>)}
                 </div>
                 <Table>
                     <thead>
@@ -93,10 +101,12 @@ class AreaView extends Component {
                                                    model: area
                                                })
                                            }}>edit</i>
-                                        <i className="material-icons right waves-effect btn-flat" title="Delete Area"
-                                           onClick={() => {
-                                               this.deleteArea(id)
-                                           }}>delete</i>
+                                        {this.state.areas.length > 1 ? (
+                                            <i className="material-icons right waves-effect btn-flat"
+                                               title="Delete Area"
+                                               onClick={() => {
+                                                   this.deleteArea(id)
+                                               }}>delete</i>) : (<></>)}
                                     </div>
                                 </td>
                             </tr>
@@ -116,5 +126,6 @@ class AreaView extends Component {
 
 AreaView.propTypes = {
     device: PropTypes.object.isRequired,
+    dismiss: PropTypes.func.isRequired
 };
 export default AreaView;

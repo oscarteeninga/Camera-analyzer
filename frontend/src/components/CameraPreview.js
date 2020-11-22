@@ -7,7 +7,16 @@ import {fabric} from 'fabric'
 
 
 class CameraPreview extends Component {
-    state = {};
+
+    constructor(props) {
+        super(props);
+        this.state = {
+            x: props.x,
+            y: props.y,
+            width: props.width,
+            height: props.height
+        }
+    }
 
     componentDidMount() {
         const updateCallback = this.props.updateCallback;
@@ -36,9 +45,11 @@ class CameraPreview extends Component {
             M.MBox.init(this.MBox, options);
         }
         M.updateTextFields();
-        var canvas = new fabric.Canvas('c', {selection: false});
+        var canvas = new fabric.Canvas('canvas', {selection: false});
 
         var rect, isDown, origX, origY, height, width;
+
+        const drawRect = this.drawRect;
 
         canvas.on('mouse:down', function (o) {
             isDown = true;
@@ -47,19 +58,8 @@ class CameraPreview extends Component {
             origY = pointer.y;
             width = pointer.x - origX;
             height = pointer.y - origY;
-            rect = new fabric.Rect({
-                left: origX,
-                top: origY,
-                originX: 'left',
-                originY: 'top',
-                width: width,
-                height: height,
-                angle: 0,
-                fill: 'rgba(173,216,230,0.2)',
-                transparentCorners: false
-            });
             canvas.clear();
-            canvas.add(rect);
+            rect = drawRect(canvas, origX, origY, width, height);
         });
 
         const updateFunction = this.updateRect;
@@ -88,6 +88,59 @@ class CameraPreview extends Component {
         canvas.on('mouse:up', function (o) {
             isDown = false;
         });
+        if (this.state.width > 0 && this.state.height > 0) {
+            this.drawRectWithCameraCoords(
+                canvas,
+                this.state.x,
+                this.state.y,
+                this.state.width,
+                this.state.height
+            );
+        }
+        const img = document.querySelector("#img");
+        const existingOnLoad = img.onload;
+        img.onload = () => {
+            canvas.setHeight(img.clientHeight);
+            canvas.setWidth(img.clientWidth);
+            if (existingOnLoad)
+                existingOnLoad();
+        }
+    }
+
+    drawRectWithCameraCoords(canvas, x, y, w, h) {
+        const img = document.querySelector("#img");
+        img.onload = () => {
+            const realWidth = img.naturalWidth;
+            const displayedWidth = img.clientWidth;
+            const realHeight = img.naturalHeight;
+            const displayedHeight = img.clientHeight;
+            const multiplierX = displayedWidth / realWidth;
+            const multiplierY = displayedHeight / realHeight;
+            this.drawRect(
+                canvas,
+                x * multiplierX,
+                y * multiplierY,
+                w * multiplierX,
+                h * multiplierY
+            )
+        };
+    }
+
+    drawRect(canvas, x, y, w, h) {
+        const rect = new fabric.Rect({
+            left: x,
+            top: y,
+            originX: 'left',
+            originY: 'top',
+            width: w,
+            height: h,
+            angle: 0,
+            fill: 'rgba(173,216,230,0.2)',
+            transparentCorners: false,
+            objectCaching: false
+        });
+        canvas.add(rect);
+        return rect;
     }
 
     updateRect(x, y, w, h, updateFunction) {
@@ -108,18 +161,19 @@ class CameraPreview extends Component {
 
     render() {
         return (
-            <div style={{
+            <div className="col s12" style={{
                 'display': 'inline-block',
-                'width': '1280px',
-                'height': '720px',
                 'margin': '0 auto',
                 'position': 'relative'
             }}>
-                <img className="materialboxed" alt="" id="img"
-                     width="1280" height="720" style={{"position": "absolute", "z-index": 1}}
-                     src={ApiService.getPreview(this.props.camera_id)}/>
-                <canvas id="c" width="1280" height="720" style={{'position': 'relative', 'z-index': 20}}>
-                </canvas>
+                <img className="materialboxed col s12" alt="Camera Preview" id="img"
+                     src={ApiService.getPreview(this.props.camera_id)}
+                     style={{
+                         "position": "absolute",
+                         "z-index": 1
+                     }}
+                />
+                <canvas className="col s12" id="canvas" style={{'position': 'relative', 'z-index': 20}}/>
             </div>
         );
     }

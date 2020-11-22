@@ -13,6 +13,24 @@ class EditCamera extends Component {
         password: ""
     };
 
+    resetState() {
+        document.getElementById("name").classList.remove("invalid");
+        document.getElementById("name").classList.add("valid");
+        document.getElementById("ip").classList.remove("invalid");
+        document.getElementById("ip").classList.add("valid");
+        document.getElementById("user").classList.remove("invalid");
+        document.getElementById("user").classList.add("valid");
+        document.getElementById("password").classList.remove("invalid");
+        document.getElementById("password").classList.add("valid");
+        this.setState({
+            id: undefined,
+            name: "",
+            ip: "",
+            user: "",
+            password: ""
+        })
+    }
+
     componentDidMount() {
         const options = {
             onOpenStart: () => {
@@ -36,12 +54,6 @@ class EditCamera extends Component {
             endingTop: "20%"
         };
         M.Modal.init(this.Modal, options);
-
-        // If you want to work on instance of the Modal then you can use the below code snippet
-        // let instance = M.Modal.getInstance(this.Modal);
-        // instance.open();
-        // instance.close();
-        // instance.destroy();
     }
 
     postCamera() {
@@ -83,7 +95,7 @@ class EditCamera extends Component {
         }
         return (
             <>
-                <div
+                <form
                     ref={Modal => {
                         this.Modal = Modal;
                     }}
@@ -113,48 +125,82 @@ class EditCamera extends Component {
                                            })
                                        }} value={this.state.name ? this.state.name : ""}/>
                                 <label htmlFor="name">Name</label>
+                                <span className="helper-text" data-error="Name cannot be empty" data-success=""/>
                             </div>
                             <div className="input-field col s6">
                                 <input placeholder="192.168.1.15" id="ip" type="text" className="active validate"
+                                       required
                                        onChange={e => {
                                            this.setState({
                                                ip: e.target.value
                                            })
                                        }} value={this.state.ip ? this.state.ip : ""}/>
                                 <label htmlFor="ip">Ip Address</label>
+                                <span className="helper-text" data-error="Ip Address cannot be empty"
+                                      data-success=""/>
                             </div>
                         </div>
                         <div className="row">
                             <div className="input-field col s6">
-                                <input placeholder="admin" id="first_name" type="text" className="active validate"
+                                <input placeholder="admin" id="user" type="text" className="active validate"
+                                       required
                                        onChange={e => {
                                            this.setState({
                                                user: e.target.value
                                            })
                                        }} value={this.state.user ? this.state.user : ""}/>
                                 <label htmlFor="user">User</label>
+                                <span className="helper-text" data-error="User cannot be empty" data-success=""/>
                             </div>
                             <div className="input-field col s6">
                                 <input id="password" type="password" className="active validate" onChange={e => {
                                     this.setState({
                                         password: e.target.value
                                     })
-                                }} value={this.state.password ? this.state.password : ""}/>
+
+                                }} required value={this.state.password ? this.state.password : ""}/>
                                 <label htmlFor="password">Password</label>
+                                <span className="helper-text" data-error="Password cannot be empty"
+                                      data-success=""/>
                             </div>
                         </div>
                     </div>
                     <div className="modal-footer">
-                        <a href="#" className="modal-close waves-effect waves-red btn-flat">
-                            Cancel
-                        </a>
-                        <a href="#" className="modal-close waves-effect waves-green btn" onClick={() => {
-                            this.postCamera()
+                        <button href="#" className="modal-close waves-effect waves-red btn-flat" onClick={() => {
+                            this.resetState();
                         }}>
+                            Cancel
+                        </button>
+                        <a name="action" type="submit" href="#" className="waves-effect waves-green btn"
+                           onClick={() => {
+                               M.updateTextFields();
+                               if (this.state.name.length > 0 && this.state.ip.length > 0 && this.state.user.length > 0 && this.state.password.length > 0) {
+                                   this.postCamera();
+                                   this.resetState();
+                                   this.Modal.M_Modal.close();
+                               } else {
+                                   if (this.state.name.length === 0) {
+                                       document.getElementById("name").classList.remove("valid");
+                                       document.getElementById("name").classList.add("invalid");
+                                   }
+                                   if (this.state.ip.length === 0) {
+                                       document.getElementById("ip").classList.remove("valid");
+                                       document.getElementById("ip").classList.add("invalid");
+                                   }
+                                   if (this.state.user.length === 0) {
+                                       document.getElementById("user").classList.remove("valid");
+                                       document.getElementById("user").classList.add("invalid");
+                                   }
+                                   if (this.state.password.length === 0) {
+                                       document.getElementById("password").classList.remove("valid");
+                                       document.getElementById("password").classList.add("invalid");
+                                   }
+                               }
+                           }}>
                             Save
                         </a>
                     </div>
-                </div>
+                </form>
             </>
         );
     }

@@ -137,7 +137,11 @@ class DeviceList extends Component {
                             </tbody>
                         </Table>)}
                 </div>)}
-                {this.state.areaView !== undefined ? (<AreaView device={this.state.areaView}/>) : <div/>}
+                {this.state.areaView !== undefined ? (<AreaView device={this.state.areaView} dismiss={() => {
+                    this.setState({
+                        areaView: undefined
+                    })
+                }}/>) : <div/>}
             </div>
         )
     }
