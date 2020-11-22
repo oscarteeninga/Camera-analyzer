@@ -46,10 +46,10 @@ class EditArea extends Component {
         M.updateTextFields();
         if (this.state.id !== this.props.model.id) {
             this.setState({
-                x: this.props.model.x,
-                y: this.props.model.y,
-                width: this.props.model.width,
-                height: this.props.model.height,
+                x: this.props.model.x.toString(),
+                y: this.props.model.y.toString(),
+                width: this.props.model.width.toString(),
+                height: this.props.model.height.toString(),
                 id: this.props.model.id,
                 name: this.props.model.name,
                 coverage: this.props.model.coverage_required.toString()

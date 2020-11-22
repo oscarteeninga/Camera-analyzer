@@ -104,6 +104,10 @@ class CameraPreview extends Component {
             canvas.setWidth(img.clientWidth);
             if (existingOnLoad)
                 existingOnLoad();
+        };
+        window.onresize = function (event) {
+            canvas.setHeight(img.clientHeight);
+            canvas.setWidth(img.clientWidth);
         }
     }
 
