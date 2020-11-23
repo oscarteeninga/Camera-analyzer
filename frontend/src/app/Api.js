@@ -1,6 +1,6 @@
 class Api {
 
-    static baseUrl = 'http://localhost:5000';
+    static baseUrl = 'http://192.168.1.46:5000';
 
     static getCameras() {
         return fetch(this.baseUrl + '/devices')
