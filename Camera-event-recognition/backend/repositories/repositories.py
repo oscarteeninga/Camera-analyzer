@@ -138,7 +138,7 @@ class EventsRepository:
         c = self.conn.cursor()
         c.execute(
             "INSERT INTO events(date,type,confidence, area_name,camera_name) VALUES (?,?,?,?,?)",
-            [timestamp, type, confidence, area_name, camera_name])
+            [timestamp, type, str(confidence), area_name, camera_name])
         self.conn.commit()
         return c.lastrowid
 
