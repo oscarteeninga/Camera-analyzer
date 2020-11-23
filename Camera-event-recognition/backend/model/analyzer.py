@@ -8,7 +8,7 @@ from config.yoloconfig import YoloConfig
 from model.receiver import Receiver
 from services.eventservice import EventService
 
-CONSOLE_INFO = 0
+CONSOLE_INFO = 1
 
 
 class Analyzer:
