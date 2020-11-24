@@ -3,7 +3,6 @@ import M from "materialize-css";
 import "materialize-css/dist/css/materialize.min.css";
 import PropTypes from 'prop-types'
 import ApiService from "../app/Api";
-import {Button} from "react-materialize";
 
 class EditCamera extends Component {
     state = {
@@ -14,6 +13,24 @@ class EditCamera extends Component {
         password: ""
     };
 
+    resetState() {
+        document.getElementById("name").classList.remove("invalid");
+        document.getElementById("name").classList.add("valid");
+        document.getElementById("ip").classList.remove("invalid");
+        document.getElementById("ip").classList.add("valid");
+        document.getElementById("user").classList.remove("invalid");
+        document.getElementById("user").classList.add("valid");
+        document.getElementById("password").classList.remove("invalid");
+        document.getElementById("password").classList.add("valid");
+        this.setState({
+            id: undefined,
+            name: "",
+            ip: "",
+            user: "",
+            password: ""
+        })
+    }
+
     componentDidMount() {
         const options = {
             onOpenStart: () => {
@@ -21,6 +38,7 @@ class EditCamera extends Component {
             },
             onOpenEnd: () => {
                 console.log("Open End");
+                M.updateTextFields();
             },
             onCloseStart: () => {
                 console.log("Close Start");
@@ -36,50 +54,35 @@ class EditCamera extends Component {
             endingTop: "20%"
         };
         M.Modal.init(this.Modal, options);
-        // If you want to work on instance of the Modal then you can use the below code snippet
-        // let instance = M.Modal.getInstance(this.Modal);
-        // instance.open();
-        // instance.close();
-        // instance.destroy();
     }
 
     postCamera() {
         const callback = this.props.callback;
-        const url = this.state.id ? ApiService.getBaseUrl() + "/devices/" + this.state.id : ApiService.getBaseUrl() + '/devices';
-        fetch(url, { // optional fetch options
-            body: JSON.stringify({
-                name: this.state.name,
-                ip: this.state.ip,
-                user: this.state.user,
-                password: this.state.password
-            }),
-            method: this.state.id ? "PUT" : "POST",
-            headers: {
-                'content-type': 'application/json'
+        const body = {
+            name: this.state.name,
+            ip: this.state.ip,
+            user: this.state.user,
+            password: this.state.password
+        };
+        const fetch = this.state.id ? ApiService.putCamera(this.state.id, body) : ApiService.postCamera(body);
+        fetch.then(function (response) {
+            if (response.status === 200) {
+                callback()
             }
         })
-            .then(function (response) {
-                if (response.status === 200) {
-                    callback()
-                }
-            })
     }
 
     deleteCamera() {
         const callback = this.props.callback;
-        const url = ApiService.getBaseUrl() + "/devices/" + this.state.id;
-        fetch(url, { // optional fetch options
-            method: "DELETE"
+        ApiService.deleteCamera(this.state.id).then(function (response) {
+            if (response.status === 200) {
+                callback()
+            }
         })
-            .then(function (response) {
-                if (response.status === 200) {
-                    callback()
-                }
-            })
     }
 
     render() {
-        if (this.state.id !== this.props.model.id)
+        if (this.state.id !== this.props.model.id) {
             this.setState({
                 id: this.props.model.id,
                 name: this.props.model.name,
@@ -88,9 +91,11 @@ class EditCamera extends Component {
                 password: this.props.model.password,
                 fps: this.props.model.fps
             });
+            M.updateTextFields();
+        }
         return (
             <>
-                <div
+                <form
                     ref={Modal => {
                         this.Modal = Modal;
                     }}
@@ -104,64 +109,98 @@ class EditCamera extends Component {
                                 float: 'left'
                             }}>{this.state.id && this.state.id > 0 ? "Edit Camera" : "New Camera"}</h4>
                             {this.state.id && (
-                                <Button className="modal-close waves-effect waves-red"
-                                        style={{float: 'right', 'backgroundColor': 'red'}}
-                                        onClick={() => {
-                                            this.deleteCamera()
-                                        }}>Delete</Button>
+                                <a className="right modal-close waves-effect waves-red btn red"
+                                   onClick={() => {
+                                       this.deleteCamera()
+                                   }}>Delete<i className="material-icons right">delete</i></a>
                             )}
                         </div>
                         <div className="row">
                             <div className="input-field col s6">
-                                <input placeholder="Outside House Camera" id="name" type="text" className="validate"
+                                <input placeholder="Outside House Camera" id="name" type="text"
+                                       className="active validate"
                                        onChange={e => {
                                            this.setState({
                                                name: e.target.value
                                            })
                                        }} value={this.state.name ? this.state.name : ""}/>
                                 <label htmlFor="name">Name</label>
+                                <span className="helper-text" data-error="Name cannot be empty" data-success=""/>
                             </div>
                             <div className="input-field col s6">
-                                <input placeholder="192.168.1.15" id="ip" type="text" className="validate"
+                                <input placeholder="192.168.1.15" id="ip" type="text" className="active validate"
+                                       required
                                        onChange={e => {
                                            this.setState({
                                                ip: e.target.value
                                            })
                                        }} value={this.state.ip ? this.state.ip : ""}/>
                                 <label htmlFor="ip">Ip Address</label>
+                                <span className="helper-text" data-error="Ip Address cannot be empty"
+                                      data-success=""/>
                             </div>
                         </div>
                         <div className="row">
                             <div className="input-field col s6">
-                                <input placeholder="admin" id="first_name" type="text" className="validate"
+                                <input placeholder="admin" id="user" type="text" className="active validate"
+                                       required
                                        onChange={e => {
                                            this.setState({
                                                user: e.target.value
                                            })
                                        }} value={this.state.user ? this.state.user : ""}/>
                                 <label htmlFor="user">User</label>
+                                <span className="helper-text" data-error="User cannot be empty" data-success=""/>
                             </div>
                             <div className="input-field col s6">
-                                <input id="password" type="text" className="validate" onChange={e => {
+                                <input id="password" type="password" className="active validate" onChange={e => {
                                     this.setState({
                                         password: e.target.value
                                     })
-                                }} value={this.state.password ? this.state.password : ""}/>
+
+                                }} required value={this.state.password ? this.state.password : ""}/>
                                 <label htmlFor="password">Password</label>
+                                <span className="helper-text" data-error="Password cannot be empty"
+                                      data-success=""/>
                             </div>
                         </div>
                     </div>
                     <div className="modal-footer">
-                        <a href="#" className="modal-close waves-effect waves-red btn-flat">
-                            Cancel
-                        </a>
-                        <a href="#" className="modal-close waves-effect waves-green btn-flat" onClick={() => {
-                            this.postCamera()
+                        <button href="#" className="modal-close waves-effect waves-red btn-flat" onClick={() => {
+                            this.resetState();
                         }}>
+                            Cancel
+                        </button>
+                        <a name="action" type="submit" href="#" className="waves-effect waves-green btn"
+                           onClick={() => {
+                               M.updateTextFields();
+                               if (this.state.name.length > 0 && this.state.ip.length > 0 && this.state.user.length > 0 && this.state.password.length > 0) {
+                                   this.postCamera();
+                                   this.resetState();
+                                   this.Modal.M_Modal.close();
+                               } else {
+                                   if (this.state.name.length === 0) {
+                                       document.getElementById("name").classList.remove("valid");
+                                       document.getElementById("name").classList.add("invalid");
+                                   }
+                                   if (this.state.ip.length === 0) {
+                                       document.getElementById("ip").classList.remove("valid");
+                                       document.getElementById("ip").classList.add("invalid");
+                                   }
+                                   if (this.state.user.length === 0) {
+                                       document.getElementById("user").classList.remove("valid");
+                                       document.getElementById("user").classList.add("invalid");
+                                   }
+                                   if (this.state.password.length === 0) {
+                                       document.getElementById("password").classList.remove("valid");
+                                       document.getElementById("password").classList.add("invalid");
+                                   }
+                               }
+                           }}>
                             Save
                         </a>
                     </div>
-                </div>
+                </form>
             </>
         );
     }

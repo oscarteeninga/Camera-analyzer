@@ -8,7 +8,7 @@ from config.yoloconfig import YoloConfig
 from model.receiver import Receiver
 from services.eventservice import EventService
 
-CONSOLE_INFO = 0
+CONSOLE_INFO = 1
 
 
 class Analyzer:
@@ -75,7 +75,7 @@ class Analyzer:
                     y = center_y - h / 2
 
                     label = str(self.yolo_config.classes[class_id])
-
+                    print("Detected " + label + " with " + str(confidence) + " confidence")
                     self.area_service.insert_events_for_areas(self.camera_config.id,
                                                               self.camera_config.name, label,
                                                               confidence, x, y, w, h)

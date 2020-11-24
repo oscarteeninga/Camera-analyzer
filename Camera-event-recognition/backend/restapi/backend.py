@@ -122,6 +122,7 @@ class DeviceIdAreas(Resource):
         y = request.json['y']
         w = request.json['width']
         h = request.json['height']
+        coverage_required = float(coverage_required) / 100
         area_service.insert_area(coverage_required, x, y, w, h, id)
         return {'success': True}, 200, {'ContentType': 'application/json'}
 
@@ -227,6 +228,7 @@ class AreaId(Resource):
         y = request.json['y']
         w = request.json['width']
         h = request.json['height']
+        coverage_required = float(coverage_required) / 100
         area_service.update_area(id, coverage_required, x, y, w, h)
         return {'success': True}, 200, {'ContentType': 'application/json'}
 

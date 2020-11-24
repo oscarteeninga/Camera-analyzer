@@ -44,7 +44,7 @@ class AreaConfig:
         return {
             "id": self.id,
             "name": self.name,
-            "confidence_required": self.coverage_required,
+            "coverage_required": self.coverage_required * 100,
             "x": self.x,
             "y": self.y,
             "width": self.width,
