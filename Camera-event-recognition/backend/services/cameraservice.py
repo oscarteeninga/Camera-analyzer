@@ -45,6 +45,10 @@ class CameraService:
                 ret, image = cap.read()
                 (flag, encodedImage) = cv2.imencode(".jpg", image)
                 yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(encodedImage) + b'\r\n')
+            else:
+                yield "Cannot connect to device for config " + str(conf)
+        else:
+            yield "Device config does not exist"
 
     def get_video(self, id):
         conf = self.get_config(id)
@@ -54,4 +58,8 @@ class CameraService:
                 ret, image = cap.read()
                 (flag, encodedImage) = cv2.imencode(".jpg", image)
                 yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(encodedImage) + b'\r\n')
+            else:
+                yield "Cannot connect to device for config " + str(conf)
+        else:
+            yield "Device config does not exist"
 

@@ -29,13 +29,16 @@ class AreaConfig:
         return self.coverage(x, y, w, h) >= self.coverage_required
 
     def coverage(self, x, y, width, height):
-        x1 = max(self.x, x)
-        y1 = max(self.y, y)
-        x2 = min(self.x + self.width, x + width)
-        y2 = min(self.y + self.height, y + height)
-        common_width = (x2 - x1)
-        common_height = (y2 - y1)
-        return self.field(common_width, common_height) / self.field(width, height)
+        if self.width + self.height == 0:
+            return 1.0
+        else:
+            x1 = max(self.x, x)
+            y1 = max(self.y, y)
+            x2 = min(self.x + self.width, x + width)
+            y2 = min(self.y + self.height, y + height)
+            common_width = (x2 - x1)
+            common_height = (y2 - y1)
+            return self.field(common_width, common_height) / self.field(width, height)
 
     def to_json(self):
         return {
