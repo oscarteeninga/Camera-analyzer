@@ -1,4 +1,5 @@
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 import cv2
 import numpy as np
@@ -21,6 +22,7 @@ class Analyzer:
         self.area_service = area_service
         self.capture = Receiver(camera_config)
         self.net = self.yolo_config.net()
+        self.executor = ThreadPoolExecutor(max_workers=1)
 
     def stop(self):
         self.on = False
@@ -62,29 +64,32 @@ class Analyzer:
         boxes = []
 
         for out in outs:
-            for detection in out:
-                scores = detection[5:]
-                class_id = np.argmax(scores)
-                confidence = scores[class_id]
-                if confidence > 0.3:
-                    center_x = int(detection[0] * width)
-                    center_y = int(detection[1] * height)
-                    w = int(detection[2] * width)
-                    h = int(detection[3] * height)
-                    x = center_x - w / 2
-                    y = center_y - h / 2
-
-                    label = str(self.yolo_config.classes[class_id])
-                    print("Detected " + label + " with " + str(confidence) + " confidence")
-                    self.area_service.insert_events_for_areas(self.camera_config.id,
-                                                              self.camera_config.name, label,
-                                                              confidence, x, y, w, h)
-
-                    class_ids.append(class_id)
-                    confidences.append(float(confidence))
-                    boxes.append([x, y, w, h])
+            self.executor.submit(self.process_detection, out, width, height, class_ids, confidences, boxes)
 
         return boxes, class_ids, confidences
+
+    def process_detection(self, out, width, height, class_ids, confidences, boxes):
+        for detection in out:
+            scores = detection[5:]
+            class_id = np.argmax(scores)
+            confidence = scores[class_id]
+            if confidence > 0.25:
+                center_x = int(detection[0] * width)
+                center_y = int(detection[1] * height)
+                w = int(detection[2] * width)
+                h = int(detection[3] * height)
+                x = center_x - w / 2
+                y = center_y - h / 2
+
+                label = str(self.yolo_config.classes[class_id])
+                self.area_service.insert_events_for_areas(self.camera_config.id,
+                                                          self.camera_config.name, label,
+                                                          confidence, x, y, w, h)
+                print("Detected " + label + " with " + str(confidence) + " confidence")
+
+                class_ids.append(class_id)
+                confidences.append(float(confidence))
+                boxes.append([x, y, w, h])
 
     def show_image(self, image, boxes, class_ids, confidences):
 
