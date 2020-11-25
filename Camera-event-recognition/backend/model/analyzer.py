@@ -22,7 +22,7 @@ class Analyzer:
         self.area_service = area_service
         self.capture = Receiver(camera_config)
         self.net = self.yolo_config.net()
-        self.executor = ThreadPoolExecutor(max_workers=1)
+        self.executor = ThreadPoolExecutor(max_workers=10)
 
     def stop(self):
         self.on = False
@@ -64,16 +64,14 @@ class Analyzer:
         boxes = []
 
         for out in outs:
-            self.process_detection(out, width, height, class_ids, confidences, boxes)
-
-        return boxes, class_ids, confidences
+            self.executor.submit(self.process_detection, out, width, height, class_ids, confidences, boxes)
 
     def process_detection(self, out, width, height, class_ids, confidences, boxes):
         for detection in out:
             scores = detection[5:]
             class_id = np.argmax(scores)
             confidence = scores[class_id]
-            if confidence > 0.25:
+            if confidence > 0.3:
                 center_x = int(detection[0] * width)
                 center_y = int(detection[1] * height)
                 w = int(detection[2] * width)
@@ -82,49 +80,29 @@ class Analyzer:
                 y = center_y - h / 2
 
                 label = str(self.yolo_config.classes[class_id])
-                self.executor.submit(self.area_service.insert_events_for_areas, self.camera_config.id,
-                                     self.camera_config.name, label, confidence, x, y, w, h)
+                self.area_service.insert_events_for_areas(self.camera_config.id,
+                                                          self.camera_config.name, label, confidence, x, y, w, h)
                 print("Detected " + label + " with " + str(confidence) + " confidence")
 
                 class_ids.append(class_id)
                 confidences.append(float(confidence))
                 boxes.append([x, y, w, h])
 
-    def show_image(self, image, boxes, class_ids, confidences):
-
-        indices = cv2.dnn.NMSBoxes(boxes, confidences, self.yolo_config.conf_threshold, self.yolo_config.nms_threshold)
-
-        for i in indices:
-            i = i[0]
-            box = boxes[i]
-            x = box[0]
-            y = box[1]
-            w = box[2]
-            h = box[3]
-
-            self.draw_bounding_box(image, class_ids[i], round(x), round(y), round(w), round(h))
-
-        out_image_name = "Analyzer"
-        cv2.imshow(out_image_name, image)
-
-    def one_process_episode(self, show):
+    def one_process_episode(self):
         frame = self.capture.read()
         begin_time = time.time()
-        boxes, class_ids, confidences = self.process_frame(frame)
-
-        if show:
-            self.show_image(frame, boxes, class_ids, confidences)
+        self.process_frame(frame)
 
         if CONSOLE_INFO == 1:
-            print("Process time: " + str(time.time()-begin_time))
+            print("Process time: " + str(time.time() - begin_time))
         cv2.waitKey(1)
 
-    def video(self, show=False):
+    def video(self):
 
         if CONSOLE_INFO == 1:
             print("Begin video processing...")
 
         while self.on:
-            self.one_process_episode(show)
+            self.one_process_episode()
 
         print("Ended video processing...")

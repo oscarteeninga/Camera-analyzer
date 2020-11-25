@@ -19,7 +19,7 @@ class AnalyzerService:
             return False
         else:
             analyzer = Analyzer(self.event_service, self.area_service, conf)
-            thread = threading.Thread(target=analyzer.video, args=(False,))
+            thread = threading.Thread(target=analyzer.video)
             thread.start()
             self.analyzers[conf] = analyzer
             return True
@@ -27,7 +27,7 @@ class AnalyzerService:
     def start_all(self):
         for conf in self.camera_service.get_configs():
             analyzer = Analyzer(self.event_service, self.area_service, conf)
-            thread = threading.Thread(target=analyzer.video, args=(False,))
+            thread = threading.Thread(target=analyzer.video)
             thread.start()
             self.analyzers[conf] = analyzer
         return True
