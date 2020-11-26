@@ -20,7 +20,6 @@ app = Api(app=flask_app, title="Camera Api", default="Camera Api", default_label
 
 configuration_name_space = app.namespace('configuration')
 device_name_space = app.namespace('devices')
-analyzer_name_space = app.namespace('')
 events_name_space = app.namespace('events')
 area_name_space = app.namespace('areas')
 
@@ -42,6 +41,8 @@ area = app.model('Area configuration params', {
 
 @app.route("/timestamp")
 class Events(Resource):
+    """Returns timestamp of application"""
+
     def get(self):
         return str(time.time() * 1000)
 
@@ -49,10 +50,10 @@ class Events(Resource):
 @events_name_space.route("")
 class Events(Resource):
     @app.doc(params={'date_from': 'Oldest date from which events are downloaded'})
-    @app.doc(params={'page': 'offset'})
-    @app.doc(params={'size': 'data size'})
+    @app.doc(params={'page': 'Events are taken from given offset'})
+    @app.doc(params={'size': 'Maximum number of events in response'})
     def get(self):
-        """Return list of events at a given time"""
+        """Return list of events"""
         date_from = request.args.get("date_from")
         pagearg = request.args.get("page")
         if pagearg is not None:
@@ -89,6 +90,7 @@ class Device(Resource):
 
 @device_name_space.route('/<string:id>')
 class DeviceId(Resource):
+    @app.doc(params={'id': 'Id of device'})
     def get(self, id):
         """Returns camera device by given id"""
         return camera_service.get_config_json(id)
@@ -103,6 +105,7 @@ class DeviceId(Resource):
         camera_service.update_config(id, name, ip, username, password)
         return {'success': True}, 200, {'ContentType': 'application/json'}
 
+    @app.doc(params={'id': 'Id of device'})
     def delete(self, id):
         """Delete camera device"""
         camera_service.delete_config(id)
@@ -111,12 +114,14 @@ class DeviceId(Resource):
 
 @device_name_space.route('/<string:id>/areas')
 class DeviceIdAreas(Resource):
+    @app.doc(params={'id': 'Id of device'})
     def get(self, id):
         """Return list of areas for camera device of given id"""
         return area_service.get_areas_json(camera_id=id)
 
     @app.expect(area)
     def post(self, id):
+        """Add area to device"""
         coverage_required = request.json['coverage_required']
         x = request.json['x']
         y = request.json['y']
@@ -137,6 +142,7 @@ class DeviceIdImage(Resource):
         file_object.seek(0)
         return send_file(file_object, mimetype='image/PNG')
 
+    @app.doc(params={'id': 'Id of device'})
     def get(self, id):
         """Returns image of camera device with given id"""
         return Response(camera_service.get_image(id),
@@ -153,13 +159,14 @@ class DeviceIdImage(Resource):
         file_object.seek(0)
         return send_file(file_object, mimetype='image/PNG')
 
+    @app.doc(params={'id': 'Id of device'})
     def get(self, id):
         """Returns image of camera device with given id"""
         return Response(camera_service.get_video(id),
                         mimetype="multipart/x-mixed-replace; boundary=frame")
 
 
-@analyzer_name_space.route('/state')
+@app.route('/state')
 class States(Resource):
     def get(self):
         """Returns states of all cameras"""
@@ -167,14 +174,15 @@ class States(Resource):
         return jsonify(states)
 
 
-@analyzer_name_space.route("/state/<string:id>")
+@app.route("/state/<string:id>")
 class StateId(Resource):
+    @app.doc(params={'id': 'Id of device'})
     def get(self, id):
         """Returns state of camera with given id"""
         return analyzer_service.state(id)
 
 
-@analyzer_name_space.route("/on")
+@app.route("/on")
 class StartAll(Resource):
     def post(self):
         """Start all cameras registered in the system"""
@@ -182,7 +190,7 @@ class StartAll(Resource):
         return {'success': success}, 200, {'ContentType': 'application/json'}
 
 
-@analyzer_name_space.route('/on/<string:id>')
+@app.route('/on/<string:id>')
 class StartId(Resource):
     @app.doc(params={'id': 'Camera id which will be started'})
     def post(self, id):
@@ -191,7 +199,7 @@ class StartId(Resource):
         return {'success': success}, 200, {'ContentType': 'application/json'}
 
 
-@analyzer_name_space.route('/off')
+@app.route('/off')
 class StopCamera(Resource):
     def post(self):
         """Stop all analyzers"""
@@ -199,7 +207,7 @@ class StopCamera(Resource):
         return {'success': success}, 200, {'ContentType': 'application/json'}
 
 
-@analyzer_name_space.route('/off/<string:id>')
+@app.route('/off/<string:id>')
 class StopId(Resource):
     @app.doc(params={'id': 'Camera id which will be stopped'})
     def post(self, id):
@@ -216,6 +224,7 @@ class Area(Resource):
 
 @area_name_space.route('/<string:id>')
 class AreaId(Resource):
+    @app.doc(params={'id': 'Id of area'})
     def get(self, id):
         """Returns single area by id"""
         return area_service.get_area_json(id)
@@ -235,4 +244,3 @@ class AreaId(Resource):
     def delete(self, id):
         """Delete area with given id"""
         area_service.delete_area(id)
-
