@@ -14,7 +14,8 @@ CONSOLE_INFO = 1
 
 class Analyzer:
 
-    def __init__(self, event_service, area_service, camera_config: CameraConfig, yolo_config=YoloConfig.basic()):
+    def __init__(self, event_service, area_service, camera_config: CameraConfig,
+                 yolo_config=YoloConfig.basic()):
         self.on = True
         self.camera_config = camera_config
         self.yolo_config = yolo_config
@@ -48,6 +49,10 @@ class Analyzer:
         cv2.putText(image, label, (x1 - 10, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
     def process_frame(self, image):
+        if self.camera_config.fit_video_to_areas:
+            x, y, width, height = self.area_service.get_camera_image_coords_trimmed_to_areas(
+                self.camera_config.id)
+            image = self.trim_to_areas(image, x, y, width, height)
         width = image.shape[1]
         height = image.shape[0]
 
@@ -64,7 +69,8 @@ class Analyzer:
         boxes = []
 
         for out in outs:
-            self.executor.submit(self.process_detection, out, width, height, class_ids, confidences, boxes)
+            self.executor.submit(self.process_detection, out, width, height, class_ids, confidences,
+                                 boxes)
 
     def process_detection(self, out, width, height, class_ids, confidences, boxes):
         for detection in out:
@@ -81,12 +87,16 @@ class Analyzer:
 
                 label = str(self.yolo_config.classes[class_id])
                 self.area_service.insert_events_for_areas(self.camera_config.id,
-                                                          self.camera_config.name, label, confidence, x, y, w, h)
+                                                          self.camera_config.name, label,
+                                                          confidence, x, y, w, h)
                 print("Detected " + label + " with " + str(confidence) + " confidence")
 
                 class_ids.append(class_id)
                 confidences.append(float(confidence))
                 boxes.append([x, y, w, h])
+
+    def trim_to_areas(self, image, x, y, width, height):
+        return image[y:y + height, x:x + width]
 
     def one_process_episode(self):
         frame = self.capture.read()
