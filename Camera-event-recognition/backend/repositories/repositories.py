@@ -1,4 +1,5 @@
 import sqlite3
+import time
 
 DATABASE = "data.db"
 
@@ -19,13 +20,6 @@ def init_tables(cursor):
                              w integer,
                              h integer,
                              camera_id BIGINT,FOREIGN KEY(camera_id) REFERENCES cameras(id))''')
-    cursor.execute('''CREATE TABLE IF NOT EXISTS events
-                        (id INTEGER PRIMARY KEY,
-                        date bigint, 
-                        confidence varchar(50),
-                        type varchar(50), 
-                        camera_name VARCHAR(50),
-                        area_name VARCHAR(1))''')
 
 
 class CamerasRepository:
@@ -38,7 +32,7 @@ class CamerasRepository:
     def insert_camera(self, name, ip, username, password):
         c = self.conn.cursor()
         c.execute("INSERT INTO cameras(name,ip, username, password) VALUES (?,?,?,?)",
-                       [name, ip, username, password])
+                  [name, ip, username, password])
         self.conn.commit()
         return c.lastrowid
 
@@ -129,29 +123,35 @@ class AreasRepository:
 
 class EventsRepository:
     def __init__(self, data_base):
-        self.conn = sqlite3.connect(data_base, check_same_thread=False)
-        c = self.conn.cursor()
-        init_tables(c)
-        self.conn.commit()
+        self.events = []
+        self.max_id = 0
 
-    def insert_event(self, type, timestamp, confidence, area_name, camera_name):
-        c = self.conn.cursor()
-        c.execute(
-            "INSERT INTO events(date,type,confidence, area_name,camera_name) VALUES (?,?,?,?,?)",
-            [timestamp, type, str(confidence), area_name, camera_name])
-        self.conn.commit()
-        return c.lastrowid
+    def insert_event(self, type, confidence, area_name, camera_name):
+        timestamp = int(time.time() * 1000)
+        self.clear_old_events(timestamp)
+        event = Event(self.max_id + 1, timestamp, type, confidence, area_name, camera_name)
+        self.max_id = self.max_id + 1
+        self.events.append(event)
+        return self.max_id
 
-    def read_events(self, page=None, size=None, date_from=None):
-        cur = self.conn.cursor()
-        if size is None:
-            size = 20
-        if page is None:
-            page = 0
-        query = "select id, date,confidence,type, camera_name, area_name from events "
+    def read_events(self, date_from=None):
         if date_from is not None:
-            query += " where `date` > %s" % date_from
-        limitq = " limit %d,%d" % ((page * size), size)
-        query += limitq
-        cur.execute(query)
-        return cur.fetchall()
+            timestamp = int(date_from)
+            events = list(filter(lambda e: e.timestamp >= timestamp, self.events))
+        else:
+            events = self.events
+        return events
+
+    def clear_old_events(self, timestamp):
+        # remove events older than 5 seconds from now
+        self.events = list(filter(lambda event: event.timestamp + 5000 > timestamp, self.events))
+
+
+class Event:
+    def __init__(self, id, timestamp, type, confidence, area_name, camera_name):
+        self.id = id
+        self.timestamp = timestamp
+        self.type = type
+        self.confidence = confidence
+        self.area_name = area_name
+        self.camera_name = camera_name

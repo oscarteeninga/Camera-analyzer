@@ -1,5 +1,3 @@
-import time
-
 from repositories.repositories import EventsRepository, DATABASE
 
 
@@ -8,25 +6,23 @@ class EventService:
         self.repository = EventsRepository(DATABASE)
 
     def insert_event(self, type, confidence, area_name, camera_name):
-        timestamp = int(time.time() * 1000)
-
-        event_id = self.repository.insert_event(type, timestamp, confidence, area_name, camera_name)
+        event_id = self.repository.insert_event(type, confidence, area_name, camera_name)
         return event_id
 
-    def get_events(self, page, size, date_from):
-        database_events = self.repository.read_events(page, size, date_from)
+    def get_events(self, date_from):
+        database_events = self.repository.read_events(date_from)
         return self.parse_events(database_events)
 
     def parse_events(self, events):
         jsons = []
         for event in events:
             dic = {
-                "id": event[0],
-                "timestamp": event[1],
-                "confidence": event[2],
-                "type": event[3],
-                "camera": event[4],
-                "area": event[5]
+                "id": str(event.id),
+                "timestamp": str(event.timestamp),
+                "confidence": str(event.confidence),
+                "type": event.type,
+                "camera": event.camera_name,
+                "area": event.area_name
             }
             jsons.append(dic)
         return jsons

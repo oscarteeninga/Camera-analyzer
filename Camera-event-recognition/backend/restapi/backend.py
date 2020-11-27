@@ -29,7 +29,12 @@ camera_request = app.model('Camera configuration params', {
     'user': fields.String(required=True, description='Camera user'),
     'password': fields.String(required=True, description='Password to camera')
 })
-
+event_request = app.model('Event test params', {
+    'type': fields.String(required=True, description='Test event type'),
+    'confidence': fields.Float(required=True, description='Test event confidence'),
+    'camera_name': fields.String(required=True, description='Name of the camera for test event'),
+    'area_name': fields.String(required=True, description='Name of an Area for test event')
+})
 area = app.model('Area configuration params', {
     'coverage_required': fields.Float(required=True, description='coverage needed to register event'),
     'x': fields.Integer(required=True, description='X cord of start of area'),
@@ -50,24 +55,21 @@ class Events(Resource):
 @events_name_space.route("")
 class Events(Resource):
     @app.doc(params={'date_from': 'Oldest date from which events are downloaded'})
-    @app.doc(params={'page': 'Events are taken from given offset'})
-    @app.doc(params={'size': 'Maximum number of events in response'})
     def get(self):
         """Return list of events"""
         date_from = request.args.get("date_from")
-        pagearg = request.args.get("page")
-        if pagearg is not None:
-            page = int(pagearg)
-        else:
-            page = None
-        sizearg = request.args.get("size")
-        if sizearg is not None:
-            size = int(sizearg)
-        else:
-            size = None
-        events = event_service.get_events(page, size, date_from)
+        events = event_service.get_events(date_from)
         print("Returned " + str(len(events)) + " events")
         return events
+
+    @app.expect(event_request)
+    def post(self):
+        type = request.json['type']
+        confidence = float(request.json['confidence'])
+        camera_name = request.json['camera_name']
+        area_name = request.json['area_name']
+        event_service.insert_event(type, confidence, area_name, camera_name)
+        return {'success': True}, 200, {'ContentType': 'application/json'}
 
 
 @device_name_space.route('')
