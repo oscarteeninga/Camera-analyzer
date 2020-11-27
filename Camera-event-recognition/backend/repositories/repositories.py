@@ -9,8 +9,10 @@ def init_tables(cursor):
                                         (id INTEGER PRIMARY KEY, 
                                         name VARCHAR(50),
                                          ip varchar(50),
+                                         
                                           username varchar(50), 
-                                          password varchar(50))''')
+                                          password varchar(50),
+                                          fit_video_to_areas boolean)''')
     cursor.execute('''CREATE TABLE IF NOT EXISTS areas
                             (id INTEGER PRIMARY KEY,
                              name varchar(1),
@@ -29,17 +31,17 @@ class CamerasRepository:
         init_tables(c)
         self.conn.commit()
 
-    def insert_camera(self, name, ip, username, password):
+    def insert_camera(self, name, ip, username, password, fit_video_to_areas):
         c = self.conn.cursor()
-        c.execute("INSERT INTO cameras(name,ip, username, password) VALUES (?,?,?,?)",
-                  [name, ip, username, password])
+        c.execute("INSERT INTO cameras(name,ip, username, password,fit_video_to_areas) VALUES (?,?,?,?,?)",
+                  [name, ip, username, password,fit_video_to_areas])
         self.conn.commit()
         return c.lastrowid
 
-    def update_camera(self, id, name, ip, username, password):
+    def update_camera(self, id, name, ip, username, password,fit_video_to_areas):
         c = self.conn.cursor()
-        query = "UPDATE cameras SET name = '{0}' , ip = '{1}', username = '{2}', password = '{3}' WHERE id = '{4}'".format(
-            name, ip, username, password, id)
+        query = "UPDATE cameras SET name = '{0}' , ip = '{1}', username = '{2}', password = '{3}', fit_video_to_areas = {4} WHERE id = '{5}'".format(
+            name, ip, username, password, fit_video_to_areas,id)
         c.execute(query)
         self.conn.commit()
 

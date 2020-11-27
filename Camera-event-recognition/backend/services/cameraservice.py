@@ -9,13 +9,13 @@ class CameraService:
         self.repository = CamerasRepository(DATABASE)
         self.area_service = area_service
 
-    def add_config(self, name, ip, username, password):
-        camera_id = self.repository.insert_camera(name, ip, username, password)
+    def add_config(self, name, ip, username, password,fit_video_to_areas):
+        camera_id = self.repository.insert_camera(name, ip, username, password,fit_video_to_areas)
         self.area_service.insert_area(0, 0, 0, 0, 0, camera_id)
         return camera_id
 
-    def update_config(self, id, name, ip, username, password):
-        self.repository.update_camera(id, name, ip, username, password)
+    def update_config(self, id, name, ip, username, password,fit_video_to_areas):
+        self.repository.update_camera(id, name, ip, username, password,fit_video_to_areas)
 
     def delete_config(self, id):
         self.repository.delete_camera(id)
@@ -25,14 +25,16 @@ class CameraService:
         return CameraConfig.from_list(conf) if conf else None
 
     def get_configs(self):
-        return [CameraConfig.from_list(camera) for camera in self.repository.read_cameras()]
+        configs = [CameraConfig.from_list(camera) for camera in self.repository.read_cameras()]
+        return configs
 
     def get_ips(self):
         return [config.ip for config in self.get_configs()]
 
     def get_config_json(self, id):
         conf = self.get_config(id)
-        return conf.to_json() if conf else None
+        config_json = conf.to_json() if conf else None
+        return config_json
 
     def get_configs_json(self):
         return [camera.to_json() for camera in self.get_configs()]

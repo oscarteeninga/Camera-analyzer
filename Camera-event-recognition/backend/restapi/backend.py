@@ -36,7 +36,8 @@ event_request = app.model('Event test params', {
     'area_name': fields.String(required=True, description='Name of an Area for test event')
 })
 area = app.model('Area configuration params', {
-    'coverage_required': fields.Float(required=True, description='coverage needed to register event'),
+    'coverage_required': fields.Float(required=True,
+                                      description='coverage needed to register event'),
     'x': fields.Integer(required=True, description='X cord of start of area'),
     'y': fields.Integer(required=True, description='Y cord of start of area'),
     'width': fields.Integer(required=True, description='The width of area'),
@@ -81,7 +82,8 @@ class Device(Resource):
         ip = request.json['ip']
         username = request.json['user']
         password = request.json['password']
-        camera_service.add_config(name, ip, username, password)
+        fit_video_to_areas = int(request.json['fit_video_to_areas'])
+        camera_service.add_config(name, ip, username, password, fit_video_to_areas)
         return {'success': True}, 200, {'ContentType': 'application/json'}
 
     def get(self):
@@ -104,7 +106,8 @@ class DeviceId(Resource):
         ip = request.json['ip']
         username = request.json['user']
         password = request.json['password']
-        camera_service.update_config(id, name, ip, username, password)
+        fit_video_to_areas = int(request.json['fit_video_to_areas'])
+        camera_service.update_config(id, name, ip, username, password, fit_video_to_areas)
         return {'success': True}, 200, {'ContentType': 'application/json'}
 
     @app.doc(params={'id': 'Id of device'})

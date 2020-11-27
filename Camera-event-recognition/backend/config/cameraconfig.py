@@ -5,14 +5,15 @@ class CameraConfig:
 
     @staticmethod
     def from_list(l):
-        return CameraConfig(l[0], l[1], l[2], l[3], l[4])
+        return CameraConfig(l[0], l[1], l[2], l[3], l[4],l[5])
 
-    def __init__(self, id, name, ip, username, password):
+    def __init__(self, id, name, ip, username, password,fit_video_to_areas):
         self.id = id
         self.name = name
         self.ip = ip
         self.username = username
         self.password = password
+        self.fit_video_to_areas=fit_video_to_areas
 
     def to_json(self):
         return {
@@ -20,7 +21,8 @@ class CameraConfig:
             'ip': self.ip,
             'name': self.name,
             'user': self.username,
-            'password': self.password
+            'password': self.password,
+            'fit_video_to_areas':self.fit_video_to_areas
         }
 
     def __eq__(self, other):

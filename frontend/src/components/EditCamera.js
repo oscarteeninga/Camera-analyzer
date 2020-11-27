@@ -10,7 +10,8 @@ class EditCamera extends Component {
         name: "",
         ip: "",
         user: "",
-        password: ""
+        password: "",
+        fit_video_to_areas: false
     };
 
     resetState() {
@@ -27,24 +28,22 @@ class EditCamera extends Component {
             name: "",
             ip: "",
             user: "",
-            password: ""
+            password: "",
+            fit_video_to_areas: false
         })
     }
 
     componentDidMount() {
         const options = {
             onOpenStart: () => {
-                console.log("Open Start");
+                this.bindState();
             },
             onOpenEnd: () => {
-                console.log("Open End");
                 M.updateTextFields();
             },
             onCloseStart: () => {
-                console.log("Close Start");
             },
             onCloseEnd: () => {
-                console.log("Close End");
             },
             inDuration: 250,
             outDuration: 250,
@@ -54,20 +53,34 @@ class EditCamera extends Component {
             endingTop: "20%"
         };
         M.Modal.init(this.Modal, options);
+
+    }
+
+    bindState() {
+        this.setState({
+            id: this.props.model.id,
+            name: this.props.model.name,
+            ip: this.props.model.ip,
+            user: this.props.model.user,
+            password: this.props.model.password,
+            fps: this.props.model.fps,
+            fit_video_to_areas: this.props.model.fit_video_to_areas
+        });
+        M.updateTextFields();
     }
 
     postCamera() {
-        const callback = this.props.callback;
         const body = {
             name: this.state.name,
             ip: this.state.ip,
             user: this.state.user,
-            password: this.state.password
+            password: this.state.password,
+            fit_video_to_areas: this.state.fit_video_to_areas ? 1 : 0
         };
         const fetch = this.state.id ? ApiService.putCamera(this.state.id, body) : ApiService.postCamera(body);
-        fetch.then(function (response) {
+        fetch.then(response => {
             if (response.status === 200) {
-                callback()
+                this.props.callback()
             }
         })
     }
@@ -82,17 +95,6 @@ class EditCamera extends Component {
     }
 
     render() {
-        if (this.state.id !== this.props.model.id) {
-            this.setState({
-                id: this.props.model.id,
-                name: this.props.model.name,
-                ip: this.props.model.ip,
-                user: this.props.model.user,
-                password: this.props.model.password,
-                fps: this.props.model.fps
-            });
-            M.updateTextFields();
-        }
         return (
             <>
                 <form
@@ -164,6 +166,16 @@ class EditCamera extends Component {
                                       data-success=""/>
                             </div>
                         </div>
+                        <div className="row col s6">
+                            <label>
+                                <input type="checkbox" className="filled-in" onChange={e => {
+                                    this.setState({
+                                        fit_video_to_areas: e.target.checked
+                                    })
+                                }} checked={this.state.fit_video_to_areas}/>
+                                <span>Fit video to areas for better detection accuracy</span>
+                            </label>
+                        </div>
                     </div>
                     <div className="modal-footer">
                         <button href="#" className="modal-close waves-effect waves-red btn-flat" onClick={() => {
@@ -176,8 +188,8 @@ class EditCamera extends Component {
                                M.updateTextFields();
                                if (this.state.name.length > 0 && this.state.ip.length > 0 && this.state.user.length > 0 && this.state.password.length > 0) {
                                    this.postCamera();
-                                   this.resetState();
                                    this.Modal.M_Modal.close();
+                                   this.resetState();
                                } else {
                                    if (this.state.name.length === 0) {
                                        document.getElementById("name").classList.remove("valid");

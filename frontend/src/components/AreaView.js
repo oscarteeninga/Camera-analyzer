@@ -58,17 +58,17 @@ class AreaView extends Component {
                         this.props.dismiss()
                     }} style={{'font-size': '36px', 'margin-top': '24px'}}>arrow_back</i>
                     <h4 className="col s6">{this.props.device.name} areas</h4>
-                    {this.state.areas.length < 4 ? (<a ref={FAB => {
+                    {this.state.areas.length < 16 ? (<a ref={FAB => {
                         this.FAB = FAB;
                     }} onClick={() => {
                         this.setState({
                             model: {"id": undefined}
                         })
                     }}
-                                                       className="btn-floating btn-large waves-effect waves-light "
-                                                       style={{
-                                                           'float': 'right',
-                                                           'margin-top': '16px',
+                                                        className="btn-floating btn-large waves-effect waves-light "
+                                                        style={{
+                                                            'float': 'right',
+                                                            'margin-top': '16px',
                                                            'margin-right': '16px'
                                                        }}>
                         <i className="material-icons">add</i></a>) : (<></>)}
