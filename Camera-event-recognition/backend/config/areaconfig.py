@@ -18,6 +18,18 @@ class AreaConfig:
     def from_list(l):
         return AreaConfig(l[0], l[1], l[2], l[3], l[4], l[5], l[6], l[7])
 
+    def copy_with_relative_coords(self, x, y):
+        return AreaConfig(
+            self.id,
+            self.name,
+            self.coverage_required,
+            self.x - x,
+            self.y - y,
+            self.width,
+            self.height,
+            self.camera_id
+        )
+
     @staticmethod
     def field(a, b):
         if min(a, b) < 0:

@@ -86,8 +86,7 @@ class Analyzer:
                 y = center_y - h / 2
 
                 label = str(self.yolo_config.classes[class_id])
-                self.area_service.insert_events_for_areas(self.camera_config.id,
-                                                          self.camera_config.name, label,
+                self.area_service.insert_events_for_areas(self.camera_config, label,
                                                           confidence, x, y, w, h)
                 print("Detected " + label + " with " + str(confidence) + " confidence")
 

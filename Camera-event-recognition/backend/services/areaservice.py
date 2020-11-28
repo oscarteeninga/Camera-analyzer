@@ -38,11 +38,20 @@ class AreaService:
         height = max_y - min_y
         return min_x, min_y, width, height
 
-    def insert_events_for_areas(self, camera_id, camera_name, type, confidence, x, y, w, h):
+    def change_absolute_coords_to_relative(self, camera_id):
+        x, y, w, h = self.get_camera_image_coords_trimmed_to_areas(camera_id)
         areas_for_camera = list(filter(lambda a: a.camera_id == camera_id, self.areas_cached))
+        return list(map(lambda area: area.copy_with_relative_coords(x, y), areas_for_camera))
+
+    def insert_events_for_areas(self, camera_config, type, confidence, x, y, w, h):
+        if camera_config.fit_video_to_areas:
+            areas_for_camera = self.change_absolute_coords_to_relative(camera_config.id)
+        else:
+            areas_for_camera = list(
+                filter(lambda a: a.camera_id == camera_config.id, self.areas_cached))
         for area in areas_for_camera:
             if area.fits(x, y, w, h):
-                self.event_service.insert_event(type, confidence, area.name, camera_name)
+                self.event_service.insert_event(type, confidence, area.name, camera_config.name)
 
     def insert_area(self, coverage_required, x, y, w, h, camera_id):
         self.repository.insert_area(coverage_required, x, y, w, h, camera_id)
