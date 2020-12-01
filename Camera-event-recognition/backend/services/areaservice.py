@@ -26,8 +26,8 @@ class AreaService:
         area = self.get_area(area_id)
         return area.to_json() if area else None
 
-    def get_camera_image_coords_trimmed_to_areas(self, camera_id):
-        areas_for_camera = list(filter(lambda a: a.camera_id == camera_id, self.areas_cached))
+    def get_camera_areas_coords(self, camera_id):
+        areas_for_camera = [a for a in self.areas_cached if a.camera_id == camera_id]
         if len(areas_for_camera) == 0:
             return None
         min_x = min(map(lambda a: a.x, areas_for_camera))
@@ -39,16 +39,15 @@ class AreaService:
         return min_x, min_y, width, height
 
     def change_absolute_coords_to_relative(self, camera_id):
-        x, y, w, h = self.get_camera_image_coords_trimmed_to_areas(camera_id)
+        x, y, w, h = self.get_camera_areas_coords(camera_id)
         areas_for_camera = list(filter(lambda a: a.camera_id == camera_id, self.areas_cached))
         return list(map(lambda area: area.copy_with_relative_coords(x, y), areas_for_camera))
 
-    def insert_events_for_areas(self, camera_config, type, confidence, x, y, w, h):
+    def insert_event(self, camera_config, type, confidence, x, y, w, h):
         if camera_config.fit_video_to_areas:
             areas_for_camera = self.change_absolute_coords_to_relative(camera_config.id)
         else:
-            areas_for_camera = list(
-                filter(lambda a: a.camera_id == camera_config.id, self.areas_cached))
+            areas_for_camera = [a for a in self.areas_cached if a.camera_id == camera_config.id]
         for area in areas_for_camera:
             if area.fits(x, y, w, h):
                 self.event_service.insert_event(type, confidence, area.name, camera_config.name)

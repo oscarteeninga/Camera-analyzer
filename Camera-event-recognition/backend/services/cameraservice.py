@@ -11,7 +11,7 @@ class CameraService:
 
     def add_config(self, name, ip, username, password,fit_video_to_areas):
         camera_id = self.repository.insert_camera(name, ip, username, password,fit_video_to_areas)
-        self.area_service.insert_area(0, 0, 0, 0, 0, camera_id)
+        # self.area_service.insert_area(0, 0, 0, 0, 0, camera_id)
         return camera_id
 
     def update_config(self, id, name, ip, username, password,fit_video_to_areas):
