@@ -1,4 +1,5 @@
 import threading
+import cv2
 
 from model.analyzer import Analyzer
 
@@ -63,5 +64,24 @@ class AnalyzerService:
 
     def state(self, id):
         return self.state_response(self.camera_service.get_config(id))
+
+    def get_video(self, id):
+        conf = self.camera_service.get_config(id)
+        if conf:
+            if conf in self.analyzers.keys():
+                analyzer = self.analyzers.get(conf)
+                sender = analyzer.sender
+                while True:
+                    image = sender.get()
+                    if image is None:
+                        break
+                    else:
+                        (flag, encodedImage) = cv2.imencode(".jpg", image)
+                        yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(encodedImage) + b'\r\n')
+            else:
+                yield "Cannot connect to device for config " + str(conf)
+        else:
+            yield "Device config does not exist"
+
 
 

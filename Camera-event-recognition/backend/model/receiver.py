@@ -1,4 +1,6 @@
-import queue, threading
+import queue
+import threading
+
 from config.cameraconfig import CameraConfig
 
 

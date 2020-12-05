@@ -1,7 +1,7 @@
+import cv2
+
 from config.cameraconfig import CameraConfig
 from repositories.repositories import CamerasRepository, DATABASE
-
-import cv2
 
 
 class CameraService:

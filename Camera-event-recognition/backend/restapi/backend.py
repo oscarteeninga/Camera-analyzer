@@ -27,7 +27,8 @@ camera_request = app.model('Camera configuration params', {
     'name': fields.String(required=True, description='Id of the camera'),
     'ip': fields.String(required=True, description='Camera ip address'),
     'user': fields.String(required=True, description='Camera user'),
-    'password': fields.String(required=True, description='Password to camera')
+    'password': fields.String(required=True, description='Password to camera'),
+    'fit_video_to_areas': fields.Boolean(required=True, description='Fit camera range to areas')
 })
 event_request = app.model('Event test params', {
     'type': fields.String(required=True, description='Test event type'),
@@ -150,25 +151,25 @@ class DeviceIdImage(Resource):
     @app.doc(params={'id': 'Id of device'})
     def get(self, id):
         """Returns image of camera device with given id"""
-        return Response(camera_service.get_image(id),
-                        mimetype="multipart/x-mixed-replace; boundary=frame")
+        return Response(camera_service.get_image(id), mimetype="multipart/x-mixed-replace; boundary=frame")
 
 
 @device_name_space.route('/<string:id>/video')
-class DeviceIdImage(Resource):
-
-    @staticmethod
-    def send_image(image):
-        file_object = io.BytesIO()
-        image.save(file_object, 'PNG')
-        file_object.seek(0)
-        return send_file(file_object, mimetype='image/PNG')
+class DeviceIdVideo(Resource):
 
     @app.doc(params={'id': 'Id of device'})
     def get(self, id):
-        """Returns image of camera device with given id"""
-        return Response(camera_service.get_video(id),
-                        mimetype="multipart/x-mixed-replace; boundary=frame")
+        """Returns video of camera device with given id"""
+        return Response(camera_service.get_video(id), mimetype="multipart/x-mixed-replace; boundary=frame")
+
+
+@device_name_space.route('/<string:id>/analyzed')
+class DeviceIdAnalyzed(Resource):
+
+    @app.doc(params={'id': 'Id of device'})
+    def get(self, id):
+        """Returns analyzed video of camera device with given id"""
+        return Response(analyzer_service.get_video(id), mimetype="multipart/x-mixed-replace; boundary=frame")
 
 
 @app.route('/state')

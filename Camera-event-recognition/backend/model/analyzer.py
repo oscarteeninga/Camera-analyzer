@@ -1,33 +1,37 @@
 import time
 from sys import platform
-from concurrent.futures import ThreadPoolExecutor
-
 import cv2
 import threading
 import numpy as np
+
 from config.areaconfig import AreaConfig
 from config.cameraconfig import CameraConfig
 from config.yoloconfig import YoloConfig
 from model.receiver import Receiver
+from model.sender import Sender
 from services.eventservice import EventService
 from services.areaservice import AreaService
 
-CONSOLE_INFO = 1
+CONSOLE_INFO = 0
 SHOW = 1
-MACOS = platform == "darwin"
 
 
 class Analyzer:
 
     def __init__(self, event_service, area_service, camera_config: CameraConfig, yolo_config=YoloConfig.basic()):
-        self.on = True
         self.camera_config = camera_config
         self.yolo_config = yolo_config
+
         self.event_service: EventService = event_service
         self.area_service: AreaService = area_service
+
         self.capture = Receiver(camera_config)
+        self.sender = Sender()
+
         self.net = self.yolo_config.net()
+
         self.show_size = None
+        self.on = True
 
     def stop(self):
         self.on = False
@@ -58,24 +62,30 @@ class Analyzer:
         cv2.putText(image, "area " + area.name + " " + str(area.coverage_required),
                     (x1 + 12, y1 + 12), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
-    def draw_image(self, image, indices, class_ids, boxes, confidences):
+    def put_image(self, image, indices, class_ids, boxes, confidences):
         for i in indices:
             i = i[0]
             self.draw_bounding_box(image, class_ids[i], confidences[i], boxes[i])
-
-        for area in self.area_service.areas_cached:
-            if area.camera_id == self.camera_config.id:
+        if self.camera_config.fit_video_to_areas:
+            for area in self.area_service.change_absolute_coords_to_relative(self.camera_config.id):
                 self.draw_area_box(image, area)
+        else:
+            for area in self.area_service.areas_cached:
+                if area.camera_id == self.camera_config.id:
+                    self.draw_area_box(image, area)
 
         if self.show_size:
             image = cv2.resize(image,  self.show_size)
 
-        cv2.imshow("Analyzer " + str(self.camera_config.name), image)
+        self.sender.put(image)
 
     def process_frame(self, image):
         if self.camera_config.fit_video_to_areas:
-            x, y, width, height = self.area_service.get_camera_areas_coords(self.camera_config.id)
-            image = image[y:y + height, x:x + width]
+            coords = self.area_service.get_camera_areas_coords(self.camera_config.id)
+            if coords:
+                x, y, width, height = coords
+                if width + height != 0:
+                    image = image[y:y + height, x:x + width]
 
         blob = cv2.dnn.blobFromImage(
             image, self.yolo_config.scale,
@@ -88,10 +98,7 @@ class Analyzer:
         width = image.shape[1]
         height = image.shape[0]
 
-        if MACOS:
-            self.process_detection(outs, width, height, image)
-        else:
-            threading.Thread(target=self.process_detection, args=(outs, width, height, image, )).start()
+        threading.Thread(target=self.process_detection, args=(outs, width, height, image, )).start()
 
     def process_detection(self, outs, width, height, image):
         class_ids = []
@@ -128,20 +135,19 @@ class Analyzer:
             self.area_service.insert_event(self.camera_config, label, confidences[i], box[0], box[1], box[2], box[3])
 
         if SHOW:
-            self.draw_image(image, indices, class_ids, boxes, confidences)
-            cv2.waitKey(1)
+            self.put_image(image, indices, class_ids, boxes, confidences)
 
     def one_process_episode(self):
         frame = self.capture.read()
         begin_time = time.time()
         self.process_frame(frame)
 
-        if CONSOLE_INFO == 1:
+        if CONSOLE_INFO:
             print("Process time: " + str(time.time() - begin_time))
 
     def video(self):
 
-        if CONSOLE_INFO == 1:
+        if CONSOLE_INFO:
             print("Begin video processing...")
 
         while self.on:

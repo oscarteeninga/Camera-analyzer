@@ -32,8 +32,8 @@ class AreaService:
             return None
         min_x = min(map(lambda a: a.x, areas_for_camera))
         min_y = min(map(lambda a: a.y, areas_for_camera))
-        max_x = min(map(lambda a: a.x + a.width, areas_for_camera))
-        max_y = min(map(lambda a: a.y + a.height, areas_for_camera))
+        max_x = max(map(lambda a: a.x + a.width, areas_for_camera))
+        max_y = max(map(lambda a: a.y + a.height, areas_for_camera))
         width = max_x - min_x
         height = max_y - min_y
         return min_x, min_y, width, height
