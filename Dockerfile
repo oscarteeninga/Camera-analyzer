@@ -53,3 +53,11 @@ RUN ln -s \
 COPY . .
 RUN pip install -r Camera-event-recognition/requirements.txt
 CMD python Camera-event-recognition/backend/restapi/backend.py
+
+FROM node:latest
+WORKDIR /frontend
+#RUN npm install -g yarn
+RUN yarn install
+COPY . .
+RUN cd /frontend
+CMD yarn start
