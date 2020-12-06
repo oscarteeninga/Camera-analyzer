@@ -6,8 +6,8 @@ class YoloConfig:
 
     @staticmethod
     def basic():
-        return YoloConfig(96, "Camera-event-recognition/backend/yolo/cfg/yolov3-320.weights", "Camera-event-recognition/backend/yolo/cfg/yolov3.txt",
-                          "Camera-event-recognition/backend/yolo/cfg/yolov3-320.cfg")
+        return YoloConfig(96, "backend/yolo/cfg/yolov3-320.weights", "backend/yolo/cfg/yolov3.txt",
+                          "backend/yolo/cfg/yolov3-320.cfg")
 
     def __init__(self, batch_size, weights_file, classes_file, config_file):
         self.classes_file = classes_file

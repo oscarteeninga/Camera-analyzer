@@ -3,7 +3,7 @@ import os
 import time
 import sys
 
-sys.path.append(os.path.join("Camera-event-recognition", "backend"))
+sys.path.append(os.path.join("backend"))
 from flask import Flask, request, jsonify, send_file, Response
 from flask_cors import CORS
 from flask_restplus import Api, fields, Resource

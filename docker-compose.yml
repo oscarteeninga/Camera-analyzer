@@ -1,0 +1,18 @@
+version: "3.8"
+services:
+  cloud-flask-back:
+    container_name: flask
+    build: ./Camera-event-recognition
+    ports:
+        - "5000:5000"
+    volumes:
+        - ./Flask:/backend
+    restart: on-failure
+  cloud-react-front:
+    container_name: react
+    build: ./frontend
+    ports:
+        - "3000:3000"
+    volumes:
+      - ./React:/front-end
+    restart: on-failure

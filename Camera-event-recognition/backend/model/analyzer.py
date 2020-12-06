@@ -1,7 +1,7 @@
 import os
 import sys
 
-sys.path.append(os.path.join("Camera-event-recognition", "backend"))
+sys.path.append(os.path.join("backend"))
 import time
 import cv2
 import threading

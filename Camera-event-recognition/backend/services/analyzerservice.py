@@ -4,7 +4,7 @@ import sys
 import os
 
 
-sys.path.append(os.path.join("Camera-event-recognition", "backend"))
+sys.path.append(os.path.join("backend"))
 from model.analyzer import Analyzer
 
 
