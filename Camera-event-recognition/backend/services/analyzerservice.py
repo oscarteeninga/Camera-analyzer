@@ -1,6 +1,10 @@
 import threading
 import cv2
+import sys
+import os
 
+
+sys.path.append(os.path.join("Camera-event-recognition", "backend"))
 from model.analyzer import Analyzer
 
 

@@ -1,6 +1,9 @@
 import io
+import os
 import time
+import sys
 
+sys.path.append(os.path.join("Camera-event-recognition", "backend"))
 from flask import Flask, request, jsonify, send_file, Response
 from flask_cors import CORS
 from flask_restplus import Api, fields, Resource
@@ -250,3 +253,7 @@ class AreaId(Resource):
     def delete(self, id):
         """Delete area with given id"""
         area_service.delete_area(id)
+
+
+if __name__ == "__main__":
+    flask_app.run(host="0.0.0.0", port=5000)

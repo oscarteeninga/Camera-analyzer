@@ -1,9 +1,11 @@
+import os
+import sys
+
+sys.path.append(os.path.join("Camera-event-recognition", "backend"))
 import time
-from sys import platform
 import cv2
 import threading
 import numpy as np
-
 from config.areaconfig import AreaConfig
 from config.cameraconfig import CameraConfig
 from config.yoloconfig import YoloConfig
@@ -46,7 +48,7 @@ class Analyzer:
         return output_layers
 
     def draw_bounding_box(self, image, class_id, confidence, box):
-        x1, y1, x2, y2 = box[0], box[1],  box[0] + box[2], box[1] + box[3]
+        x1, y1, x2, y2 = box[0], box[1], box[0] + box[2], box[1] + box[3]
         label = str(self.yolo_config.classes[class_id])
         color = self.yolo_config.colors[class_id]
         cv2.rectangle(image, (x1, y1), (x2, y2), color, 2)
@@ -75,7 +77,7 @@ class Analyzer:
                     self.draw_area_box(image, area)
 
         if self.show_size:
-            image = cv2.resize(image,  self.show_size)
+            image = cv2.resize(image, self.show_size)
 
         self.sender.put(image)
 
@@ -98,7 +100,7 @@ class Analyzer:
         width = image.shape[1]
         height = image.shape[0]
 
-        threading.Thread(target=self.process_detection, args=(outs, width, height, image, )).start()
+        threading.Thread(target=self.process_detection, args=(outs, width, height, image,)).start()
 
     def process_detection(self, outs, width, height, image):
         class_ids = []
