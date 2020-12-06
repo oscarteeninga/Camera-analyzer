@@ -6,7 +6,7 @@ services:
     ports:
         - "5000:5000"
     volumes:
-        - ./Flask:/backend
+        - ./Flask:/Camera-event-recognition
     restart: on-failure
   react-front:
     container_name: react
